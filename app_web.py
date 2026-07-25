@@ -180,7 +180,7 @@ def api_abrir_ff():
     return jsonify({
         "ok": True,
         "aviso": "⚠️ Funciona rodando o proxy DIRETO no Termux do celular",
-        "comando": "am start -a android.intent.action.MAIN -c android.intent.category.LAUNCHER -n com.dts.freefireth/com.dts.freefire.MainActivity",
+        return jsonify({"ok": True, "mensagem": "✅ ABRINDO FREE FIRE E JANELA DO SISTEMA", "passos": ["1. O jogo abre automaticamente", "2. Em até 3 segundos aparece a janela flutuante", "3. Você pode arrastar ela para qualquer canto"]})
         "instrucao": "Quando rodar localmente, clicar aqui já abre automaticamente"
     })
 

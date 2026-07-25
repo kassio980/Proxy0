@@ -1,180 +1,58 @@
-<!doctype html><html><head><meta charset=utf-8>
-<meta name=viewport content="width=device-width,initial-scale=1,user-scalable=no">
-<title>🪟 OKAIDA MINI · HS PROXY</title>
-<script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+<!doctype html><html lang=pt-BR><head><meta charset=utf-8>
+<meta name=viewport content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>OKAIDA OFICIAL · CONTROLE</title>
 <style>
-*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-:root{
-  --bg:#050816cc;--card:#0d1338ee;--borda:#312e81;
-  --roxo:#7c3aed;--azul:#38bdf8;--vermelho:#ef4444;--vermelho2:#dc2626;--verde:#22c55e;--texto:#fff;--muted:#94a3b8
+:root{--fundo:rgba(5,8,22,.94);--borda:#7c3aed;--roxo:#a78bfa;--verde:#22c55e;--vermelho:#ef4444;--texto:#e2e8f0}
+*{margin:0;padding:0;box-sizing:border-box;font-family:system-ui}
+body{background:transparent;padding:0}
+.janela{
+  width:310px;background:var(--fundo);border:2px solid var(--borda);border-radius:16px;padding:14px;
+  backdrop-filter:blur(18px);box-shadow:0 0 40px rgba(124,58,237,.4);position:fixed;top:120px;left:12px;z-index:99999
 }
-html,body{background:transparent;font-family:system-ui,sans-serif;color:var(--texto);font-size:12px;overflow:hidden}
-/* CANVAS DA LINHA DE CAPA — SOBREPÕE TUDO */
-#linhaCanvas{position:fixed;inset:0;width:100vw;height:100vh;pointer-events:none;z-index:1}
-.janela{position:fixed;top:8px;right:8px;width:min(340px,96vw);background:var(--bg);backdrop-filter:blur(14px);border:1px solid var(--borda);border-radius:14px;box-shadow:0 20px 60px #00000088;z-index:99999;user-select:none}
-.topo{display:flex;align-items:center;justify-content:space-between;padding:8px 10px;border-bottom:1px solid var(--borda);cursor:move}
-.topo .t{font-weight:800;letter-spacing:.5px;font-size:12px;background:linear-gradient(90deg,#fff,#ef4444,#c4b5fd);-webkit-background-clip:text;background-clip:text;color:transparent}
-.topo .botoes{display:flex;gap:4px}
-.min{width:18px;height:18px;border-radius:50%;background:#f59e0b;border:0;cursor:pointer}
-.fecha{width:18px;height:18px;border-radius:50%;background:var(--vermelho);border:0;cursor:pointer}
-.corpo{padding:8px;max-height:72vh;overflow:auto}
-.linha{display:flex;align-items:center;justify-content:space-between;padding:6px 4px;border-bottom:1px solid #1a1f4a}
-.linha:last-child{border:0}
-.linha .n{font-weight:600;font-size:11.5px}
-.linha .n small{display:block;color:var(--muted);font-weight:400;font-size:10px;margin-top:1px}
-.tg{position:relative;width:34px;height:18px;background:#1e1b4b;border-radius:999px;cursor:pointer;flex-shrink:0}
-.tg::after{content:"";position:absolute;width:14px;height:14px;background:#64748b;border-radius:50%;top:2px;left:2px;transition:.15s}
-.tg.on{background:linear-gradient(135deg,var(--roxo),var(--azul))}
-.tg.on::after{left:18px;background:#fff}
-.tg.vermelho.on{background:linear-gradient(135deg,#7f1d1d,var(--vermelho))}
-.status{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin-bottom:6px}
-.st{background:#0a0f2ecc;border:1px solid var(--borda);border-radius:8px;padding:4px;text-align:center}
-.st .v{font-weight:900;font-size:12px}
-.st .l{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:1px}
-.big{margin-top:6px;padding:8px;border-radius:10px;background:linear-gradient(135deg,#7f1d1d,#ef4444);text-align:center;font-weight:900;letter-spacing:1px;cursor:pointer;font-size:12px;box-shadow:0 0 20px #ef444455}
-.big.off{background:#1e1b4b;color:var(--muted);box-shadow:none}
-.acoes{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px}
-.btn{padding:7px;border-radius:8px;border:0;font-weight:700;font-size:11px;cursor:pointer;color:#fff}
-.btn.ff{background:linear-gradient(135deg,var(--azul),var(--roxo))}
-.btn.wifi{background:linear-gradient(135deg,#0ea5e9,#22c55e)}
-.btn.linha{background:linear-gradient(135deg,#7f1d1d,var(--vermelho))}
-.btn.off{background:#1e1b4b;color:var(--muted)}
-.tabs{display:flex;border-bottom:1px solid var(--borda);margin:6px 0}
-.tab{padding:6px 8px;font-size:11px;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent}
-.tab.ativo{color:#fff;border-bottom-color:var(--vermelho)}
-.arrasta{opacity:.5;font-size:10px;text-align:center;padding:2px;color:var(--muted)}
+.cabecalho{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;cursor:move}
+.cabecalho h3{color:var(--roxo);font-size:15px;font-weight:800}
+.fechar{background:var(--vermelho);border-radius:50%;width:24px;height:24px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:bold;cursor:pointer}
+.grupo{margin-bottom:10px}
+.linha{display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:rgba(124,58,237,.08);border-radius:8px;margin:4px 0}
+.switch{width:44px;height:22px;border-radius:22px;background:#333;position:relative;transition:.2s;cursor:pointer}
+.switch.ligado{background:var(--verde)}
+.switch::after{content:"";position:absolute;top:2px;left:2px;width:18px;height:18px;background:#fff;border-radius:50%;transition:.2s}
+.switch.ligado::after{transform:translateX(22px)}
+.botao{width:100%;padding:10px;border-radius:8px;border:0;font-weight:700;margin-top:4px;cursor:pointer}
+.botao.vermelho{background:linear-gradient(90deg,#ef4444,#f87171);color:#fff}
+.botao.roxo{background:linear-gradient(90deg,#7c3aed,#a78bfa);color:#fff}
 </style></head><body>
 
-<canvas id=linhaCanvas></canvas>
-
-<div class=janela id=j>
-  <div class=topo id=h><div class=t>🩸 OKAIDA · HS PROXY v2.3</div><div class=botoes><button class=min id=min></button><button class=fecha onclick=document.body.innerHTML=''></button></div></div>
-  <div class=corpo id=c>
-    <div class=status>
-      <div class=st><div class=v id=kup>--:--</div><div class=l>UP</div></div>
-      <div class=st><div class=v id=kc>0</div><div class=l>CAPAS</div></div>
-      <div class=st><div class=v id=kon>0</div><div class=l>ON</div></div>
-      <div class=st><div class=v id=kdist>0m</div><div class=l>ALVO</div></div>
-    </div>
-    <div class=tabs>
-      <div class="tab ativo" data-t=princ>PRINCIPAIS</div>
-      <div class=tab data-t=avanc>AVANÇADOS</div>
-      <div class=tab data-t=risco>RISCO</div>
-    </div>
-    <div id=funcoes></div>
-    <div class="big off" id=fv onclick=fullVermelho()>🔴 FULL VERMELHO · MUNDIAL</div>
-    <div class=acoes>
-      <button class="btn ff" onclick=abrirFF()>🎮 ABRIR FF</button>
-      <button class="btn wifi" onclick=gerarWifi()>📶 WI-FI 6D</button>
-      <button class="btn linha" onclick=toggleLinha()>🩸 LINHA HS</button>
-      <button class="btn off" onclick=location.reload()>🔄 ATUALIZAR</button>
-    </div>
-    <div class=arrasta>↕️ arraste o topo</div>
+<div class=janela id=janela>
+  <div class=cabecalho>
+    <h3>🔰 OKAIDA OFICIAL</h3>
+    <div class=fechar onclick=this.parentElement.parentElement.style.display='none'>×</div>
   </div>
+
+  <div class=grupo>
+    <div class=linha>🔴 FULL VERMELHO<div class=switch onclick=toggleFuncao('full',this)></div></div>
+    <div class=linha>🎯 LINHA VERMELHA<div class=switch onclick=toggleFuncao('linha',this)></div></div>
+    <div class=linha>💀 AUTO CABEÇA<div class=switch onclick=toggleFuncao('hs',this)></div></div>
+    <div class=linha>🔇 SILENT AIM<div class=switch onclick=toggleFuncao('silent',this)></div></div>
+    <div class=linha>🎯 SEM RECUO<div class=switch onclick=toggleFuncao('recuo',this)></div></div>
+    <div class=linha>🧱 VER ATRÁS DE PAREDE<div class=switch onclick=toggleFuncao('esp',this)></div></div>
+  </div>
+
+  <button class="botao roxo" onclick=window.open('/dash','_blank')>⚙️ ABRIR PAINEL COMPLETO</button>
+  <button class="botao vermelho" onclick=window.location.reload()>🔄 RECARREGAR JANELA</button>
 </div>
 
 <script>
-const HACKS = {
-  princ:[
-    {id:'LINHA_CAPA',n:'🩸 Linha HS',s:'linha vermelha na cabeça',v:true},
-    {id:'SILENT_AIM',n:'🔇 Silent Aim',s:'mira não move, registro sim',v:true},
-    {id:'AUTO_HS',n:'💀 Auto HS',s:'qualquer tiro = cabeça',v:true},
-    {id:'MAGIC_BULLET',n:'✨ Magic Bullet',s:'bala curva / ignora parede',v:true},
-    {id:'NO_RECOIL_PRO',n:'🎯 No Recoil Pro',s:'0 recuo por arma',v:true},
-    {id:'AIMBOT_SUAVE',n:'🎯 Aimbot',s:'mira humana na cabeça',v:true},
-  ],
-  avanc:[
-    {id:'WALL_TRACK',n:'🧱 Wall Track',s:'inimigo atrás parede',v:true},
-    {id:'ESP_FULL',n:'👁️ ESP Full',s:'vida/escudo/arma/dist',v:true},
-    {id:'QUICK_SCOPE',n:'🎯 Quick Scope',s:'mira+atira AWM/escop',v:true},
-    {id:'RAPID_FIRE',n:'⚡ Rapid Fire',s:'tiros + rápido',v:false},
-    {id:'AUTO_FIRE',n:'🔫 Auto Fire',s:'atira sozinho',v:false},
-    {id:'ZERO_GRAVITY_BULLET',n:'🪐 Zero Grav',s:'bala não cai',v:true},
-  ],
-  risco:[
-    {id:'BULLET_DEFLECT',n:'🛡️ Bullet Deflect',s:'desvia tiros inimigos',v:false,r:true},
-    {id:'ANTI_KNOCK',n:'💪 Anti Knock',s:'não toma recuo',v:true},
-    {id:'DANO_MÁXIMO',n:'💀 Dano Máx',s:'+220% dano',v:false,r:true},
-    {id:'TIRO_PERFURANTE',n:'⚡ Perfurante',s:'atravessa 6',v:false,r:true},
-    {id:'CAPA_NO_AR',n:'🚀 Capa no Ar',s:'atira p/ cima → HS',v:false,r:true},
-    {id:'NIVEL_MUNDIAL',n:'🌍 Nível Mundial',s:'TUDO no MÁXIMO',v:false,r:true},
-  ]
-};
-let ABA='princ',FV=false,LINHA_ATIVA=true,io;
-const C=document.getElementById('linhaCanvas'),X=C.getContext('2d');
-function redim(){C.width=innerWidth;C.height=innerHeight}addEventListener('resize',redim);redim();
-
-function desenhaLinha(d){
-  X.clearRect(0,0,C.width,C.height);
-  if(!(d&&d.ativa))return;
-  const x1=d.x1*C.width,y1=d.y1*C.height,x2=d.x2*C.width,y2=d.y2*C.height;
-  // Brilho externo
-  X.strokeStyle=d.cor;X.globalAlpha=0.25;X.lineWidth=d.espessura+6;
-  X.beginPath();X.moveTo(x1,y1);X.lineTo(x2,y2);X.stroke();
-  // Linha principal
-  X.globalAlpha=1;X.lineWidth=d.espessura;
-  X.beginPath();X.moveTo(x1,y1);X.lineTo(x2,y2);X.stroke();
-  // Ponta (cabeça)
-  X.fillStyle=d.cor;X.beginPath();X.arc(x2,y2,6,0,Math.PI*2);X.fill();
-  X.fillStyle='#fff';X.beginPath();X.arc(x2,y2,2.5,0,Math.PI*2);X.fill();
+function toggleFuncao(nome,el){
+  el.classList.toggle('ligado')
+  fetch(`/api/hack/${nome}/${el.classList.contains('ligado')?1:0}`)
 }
-
-function render(){
-  document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('ativo',t.dataset.t===ABA));
-  document.getElementById('funcoes').innerHTML=HACKS[ABA].map(f=>`
-    <div class=linha><div class=n>${f.n}<small>${f.s}</small></div>
-    <div class="tg ${f.v?'on':''} ${f.r?'vermelho':''}" onclick=hack('${f.id}',this)></div></div>`).join('');
-  const b=document.getElementById('fv');
-  b.className='big '+(FV?'':'off');
-  b.innerHTML=FV?'🔴 FULL VERMELHO · NÍVEL MUNDIAL 🔥':'🔴 FULL VERMELHO · DESLIGADO';
-}
-function hack(id,el){
-  const f=[...Object.values(HACKS)].flat().find(x=>x.id===id);if(!f)return;
-  f.v=el.classList.toggle('on');
-  fetch(`/api/hack/${id}/${f.v?1:0}`);
-  if(id==='NIVEL_MUNDIAL') fetch(`/api/fullvermelho/${f.v?10:0}`);
-  if(id==='LINHA_CAPA') LINHA_ATIVA=f.v;
-}
-function fullVermelho(){
-  FV=!FV;
-  fetch(`/api/fullvermelho/${FV?10:0}`).then(()=>{
-    ['NIVEL_MUNDIAL','DANO_MÁXIMO','TIRO_PERFURANTE','CAPA_NO_AR','BULLET_DEFLECT','MAGIC_BULLET','SILENT_AIM','AUTO_HS'].forEach(id=>{
-      const f=[...Object.values(HACKS)].flat().find(x=>x.id===id);
-      if(f)f.v=FV;
-    });
-    fetch('/api/hacks').then(r=>r.json()).then(d=>{
-      if(d.hacks)Object.entries(d.hacks).forEach(([k,v])=>{
-        const f=[...Object.values(HACKS)].flat().find(x=>x.id===k);
-        if(f)f.v=!!v.ativo;
-      });
-      render();
-    });
-  });
-}
-function toggleLinha(){LINHA_ATIVA=!LINHA_ATIVA;fetch(`/api/hack/LINHA_CAPA/${LINHA_ATIVA?1:0}`);const f=HACKS.princ.find(x=>x.id==='LINHA_CAPA');if(f)f.v=LINHA_ATIVA;render()}
-function abrirFF(){fetch('/api/virus/abrir_ff')}
-function gerarWifi(){fetch('/api/wifi/novo').then(r=>r.json()).then(d=>{if(d.ok)alert('✅ WI-FI: '+d.dados.codigo)})}
-document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{ABA=t.dataset.t;render()});
-
-// Loop ao vivo
-setInterval(()=>{
-  fetch('/api/linha').then(r=>r.json()).then(d=>{
-    if(d.ok){desenhaLinha(d);document.getElementById('kdist').textContent=(d.distancia||0)+'m'}
-  });
-  fetch('/api/st').then(r=>r.json()).then(s=>{
-    document.getElementById('kup').textContent=(s.uptime||{}).texto||'--:--';
-    document.getElementById('kc').textContent=s.capa||0;
-    document.getElementById('kon').textContent=(s.usuarios||{}).online_agora||0;
-  });
-},600);
-
-// Arrastar janela
-const j=document.getElementById('j'),h=document.getElementById('h');
-let dx=0,dy=0,mv=false;
-h.ontouchstart=h.onmousedown=e=>{mv=true;const p=e.touches?e.touches[0]:e;dx=p.clientX-j.offsetLeft;dy=p.clientY-j.offsetTop};
-document.ontouchmove=document.onmousemove=e=>{if(!mv)return;const p=e.touches?e.touches[0]:e;j.style.left=(p.clientX-dx)+'px';j.style.top=(p.clientY-dy)+'px';j.style.right='auto'};
-document.ontouchend=document.onmouseup=()=>mv=false;
-document.getElementById('min').onclick=()=>{const c=document.getElementById('c');c.style.display=c.style.display==='none'?'block':'none'};
-
-render();
-</script></body></html>
+// Faz janela arrastar
+const jan = document.getElementById('janela');let mov=false,x,y
+jan.addEventListener('mousedown',e=>{mov=true;x=e.clientX-jan.offsetLeft;y=e.clientY-jan.offsetTop})
+document.addEventListener('mousemove',e=>{if(!mov)return;jan.style.left=(e.clientX-x)+'px';jan.style.top=(e.clientY-y)+'px'})
+document.addEventListener('mouseup',()=>mov=false)
+// Abre automaticamente em 2s
+setTimeout(()=>jan.style.display='block',2000)
+</script>
+</body></html>
