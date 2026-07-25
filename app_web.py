@@ -153,6 +153,7 @@ if __name__=="__main__":
 
 
 
+
 @app.route("/api/virus/conectar_adb")
 @auth.requer_login
 def api_conectar_adb():
@@ -161,11 +162,13 @@ def api_conectar_adb():
     codigo = request.args.get("codigo", "").strip()
     return jsonify({
         "ok": True,
-        "aviso": "📝 COPIE E COLE NESSA ORDEM NO TERMUX",
+        "aviso": "✅ SEUS DADOS JÁ PRONTOS",
+        "ip": ip,
+        "porta": porta,
+        "codigo_digite_aqui": codigo,
         "passo1": "adb kill-server && adb start-server",
         "passo2": f"adb pair {ip}:{porta} {codigo}",
-        "passo3": f"adb connect {ip}:{porta}",
-        "importante": "❌ SEMPRE USE A PORTA DA TELA DO SEU REDMI"
+        "passo3": f"adb connect {ip}:{porta}"
     })
 
 @app.route("/api/virus/abrir_ff")
@@ -174,7 +177,7 @@ def api_abrir_ff():
     return jsonify({
         "ok": True,
         "comando": "adb shell am start -a android.intent.action.MAIN -c android.intent.category.LAUNCHER -n com.dts.freefireth/com.dts.freefire.MainActivity",
-        "instrucao": "Só funciona depois que conectou com sucesso"
+        "aviso": "Funciona só depois de conectado com sucesso"
     })
 
 @app.route("/api/virus/desativar_proxy")
@@ -182,8 +185,7 @@ def api_abrir_ff():
 def api_desativar_proxy():
     return jsonify({
         "ok": True,
-        "passo1": "Ajustes > Wi-Fi > clique na rede",
-        "passo2": "Proxy > NENHUM / DESLIGADO"
+        "passos": ["Ajustes > Wi-Fi > clique na rede", "Proxy > NENHUM / DESLIGADO"]
     })
 
 @app.route("/api/fullvermelho/toggle")
