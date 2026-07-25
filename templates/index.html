@@ -1,176 +1,326 @@
 <!doctype html><html lang=pt-BR><head><meta charset=utf-8>
 <meta name=viewport content="width=device-width,initial-scale=1">
 <title>🕵️ PROXY OKAIDA — PAINEL</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+<script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
 <style>
-:root{--g:#0f0;--r:#f00;--y:#ff0;--c:#0ff;--m:#f0f;--b:#008cff;--bg:#000}
-*{margin:0;padding:0;box-sizing:border-box}
-html,body{background:var(--bg);color:var(--g);font-family:'Courier New',monospace;min-height:100vh;
-  background-image:radial-gradient(#0f02 1px,transparent 1px),linear-gradient(#0f01 1px,transparent 1px);
-  background-size:3px 3px,100% 24px;overflow-x:hidden}
-header{padding:14px 20px;border-bottom:1px solid #0f05;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;background:#000a}
-h1{font-size:18px;letter-spacing:4px;text-shadow:0 0 8px var(--g)}.blink{animation:b 1s steps(2) infinite}@keyframes b{50%{opacity:0}}
-.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;padding:14px}
-.card{border:1px solid #0f05;padding:12px;background:#000a;box-shadow:0 0 10px #0f03 inset}
-.card .t{font-size:10px;letter-spacing:2px;opacity:.7;text-transform:uppercase}
-.card .v{font-size:24px;font-weight:bold;text-shadow:0 0 6px currentColor;margin-top:4px}
-h2{font-size:13px;letter-spacing:3px;color:var(--c);margin:18px 14px 8px;border-bottom:1px dashed #0ff5;padding-bottom:4px}
-.painel{padding:0 14px 30px;display:grid;grid-template-columns:1.2fr .8fr;gap:14px}
-@media(max-width:900px){.painel{grid-template-columns:1fr}}
-.box{border:1px solid #0f05;background:#000a;padding:12px}
-.btn{background:transparent;border:1px solid var(--y);color:var(--y);padding:8px 10px;font-family:monospace;cursor:pointer;margin:3px;font-size:11px;letter-spacing:1px}
-.btn:hover{background:var(--y);color:#000}.btn.on{background:var(--y);color:#000;box-shadow:0 0 12px #ff08}
-.btn.r{border-color:var(--r);color:var(--r)}.btn.r:hover{background:var(--r);color:#fff}
-.btn.c{border-color:var(--c);color:var(--c)}.btn.c:hover{background:var(--c);color:#000}
-.btn.m{border-color:var(--m);color:var(--m)}.btn.m:hover{background:var(--m);color:#000}
-.gridbtns{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:4px}
-.armas{display:grid;grid-template-columns:repeat(auto-fit,minmax(90px,1fr));gap:4px}
-.bar{height:8px;background:#0f02;border:1px solid #0f04;margin-top:6px;overflow:hidden}
-.bar>div{height:100%;background:linear-gradient(90deg,#0f0,#ff0);width:0%;transition:.3s}
-.mapa{height:220px;border:1px solid #0f05;background:
-  radial-gradient(circle at 30% 40%, #0f02 0 2px, transparent 3px),
-  radial-gradient(circle at 60% 30%, #0f02 0 2px, transparent 3px),
-  radial-gradient(circle at 45% 70%, #0f02 0 2px, transparent 3px),
-  #0008;position:relative;overflow:hidden}
-.ponto{position:absolute;width:8px;height:8px;background:#0f0;border-radius:50%;box-shadow:0 0 8px #0f0;animation:p 2s infinite}
-@keyframes p{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(2);opacity:.3}}
-.log{height:220px;overflow:auto;font-size:11px;line-height:1.5;background:#000;border:1px solid #0a3b0a;padding:8px;white-space:pre-wrap}
-.qr{display:inline-block;padding:6px;background:#fff;border:1px solid #0f05}
-.col2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+:root{
+  --bg:#050816;--bg2:#070b1f;--card:#0d1338;--card2:#111a45;
+  --borda:#1e1b4b;--borda2:#312e81;
+  --roxo:#7c3aed;--roxo2:#a78bfa;--azul:#38bdf8;--azul2:#0ea5e9;
+  --verde:#22c55e;--vermelho:#ef4444;--amarelo:#f59e0b;
+  --texto:#e2e8f0;--muted:#94a3b8;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--texto);font-family:Inter,system-ui,sans-serif;font-size:14px}
+::-webkit-scrollbar{width:8px;height:8px}::-webkit-scrollbar-thumb{background:#312e81;border-radius:8px}
+
+.app{display:grid;grid-template-columns:260px 1fr;min-height:100vh}
+.sidebar{background:linear-gradient(180deg,#0a0f2e,#070a1f);border-right:1px solid var(--borda);padding:20px 0;position:sticky;top:0;height:100vh}
+.logo-side{padding:0 18px 20px;border-bottom:1px solid var(--borda);display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.hex{width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,var(--roxo),#4338ca);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.menu-item{display:flex;align-items:center;gap:10px;padding:11px 18px;color:var(--muted);cursor:pointer;transition:.15s;border-left:3px solid transparent;font-size:13.5px}
+.menu-item:hover{background:#111a45;color:#fff}
+.menu-item.ativo{background:linear-gradient(90deg,rgba(124,58,237,.18),transparent);color:#fff;border-left-color:var(--roxo)}
+.topbar{background:#0a0f2ecc;backdrop-filter:blur(10px);border-bottom:1px solid var(--borda);padding:14px 28px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50}
+.conteudo{padding:24px 28px 60px}
+
+.card{background:linear-gradient(180deg,var(--card),var(--card2));border:1px solid var(--borda);border-radius:14px;padding:18px;box-shadow:0 4px 20px rgba(0,0,0,.3)}
+.card-tit{font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+.card-val{font-size:28px;font-weight:800;background:linear-gradient(90deg,#fff,#c4b5fd);-webkit-background-clip:text;background-clip:text;color:transparent;line-height:1.1}
+.card-sub{font-size:12px;color:var(--muted);margin-top:4px}
+.tag{display:inline-block;padding:3px 9px;border-radius:999px;font-size:11px;font-weight:600}
+.tag-ligado{background:rgba(34,197,94,.15);color:#4ade80;border:1px solid rgba(34,197,94,.3)}
+.tag-desl{background:rgba(239,68,68,.12);color:#f87171;border:1px solid rgba(239,68,68,.25)}
+.tag-info{background:rgba(56,189,248,.12);color:#7dd3fc;border:1px solid rgba(56,189,248,.25)}
+
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;padding:10px 12px;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--borda)}
+td{padding:11px 12px;border-bottom:1px solid #1a1f4a}
+tr:hover td{background:#111a45}
+
+.toggle{position:relative;width:40px;height:22px;background:#1e1b4b;border-radius:999px;cursor:pointer;transition:.2s;flex-shrink:0}
+.toggle::after{content:"";position:absolute;width:16px;height:16px;background:#64748b;border-radius:50%;top:3px;left:3px;transition:.2s}
+.toggle.on{background:linear-gradient(135deg,var(--roxo),var(--azul))}
+.toggle.on::after{left:21px;background:#fff}
+
+.btn{padding:9px 14px;border-radius:9px;font-size:12.5px;font-weight:600;cursor:pointer;border:0;transition:.15s;display:inline-flex;align-items:center;gap:6px}
+.btn-primary{background:linear-gradient(135deg,var(--roxo),#4f46e5);color:#fff}
+.btn-primary:hover{transform:translateY(-1px);box-shadow:0 8px 20px rgba(124,58,237,.4)}
+.btn-sec{background:#111a45;color:#fff;border:1px solid var(--borda2)}
+.btn-verde{background:rgba(34,197,94,.15);color:#4ade80;border:1px solid rgba(34,197,94,.3)}
+.btn-verm{background:rgba(239,68,68,.12);color:#f87171;border:1px solid rgba(239,68,68,.25)}
+
+.aba{display:none}.aba.ativa{display:block}
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--borda);margin-bottom:18px;flex-wrap:wrap}
+.tab{padding:10px 16px;color:var(--muted);cursor:pointer;font-size:13px;border-bottom:2px solid transparent}
+.tab:hover{color:#fff}.tab.ativo{color:#fff;border-bottom-color:var(--roxo)}
+
+.logs{background:#050816;border:1px solid var(--borda);border-radius:10px;padding:12px 14px;height:360px;overflow:auto;font-family:Consolas,monospace;font-size:12px;line-height:1.55}
+.logs .l{margin:1px 0}.logs .t{color:#64748b;margin-right:8px}
+.logs .ok{color:#4ade80}.logs .er{color:#f87171}.logs .info{color:#7dd3fc}.logs .av{color:#fbbf24}
+
+.grid-kpi{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px}
+.grid-2{display:grid;grid-template-columns:2fr 1fr;gap:16px}
+.grid-3{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px}
+@media(max-width:1000px){.app{grid-template-columns:1fr}.sidebar{display:none}.grid-2{grid-template-columns:1fr}}
+
+.blink{animation:b 1s steps(2) infinite}@keyframes b{50%{opacity:.3}}
+.graf{height:300px;width:100%}
 </style></head><body>
-<header>
-  <div><h1>🕵️ PROXY OKAIDA <span class=blink>_</span></h1>
-  <div style=font-size:11px;opacity:.7>🔑 {{ user.nivel }} · ⏰ <span id=up>--:--:--</span> · 📶 <span id=ip>--</span></div></div>
-  <div>
-    <button class="btn c" onclick=wifi()>📶 GERAR CÓDIGO WI-FI</button>
-    <button class="btn m" onclick=abrirff()>📱 ABRIR FREE FIRE</button>
-    <button class="btn m" onclick=injetar()>⚡ INJETAR PROXY</button>
-    <button class="btn r" onclick="location='/logout'">🚪 SAIR</button>
-  </div>
-</header>
 
-<div class=grid id=kpis></div>
-
-<h2>🎯 PERFIS DE ATAQUE</h2>
-<div class="box" style=margin:0 14px><div class=gridbtns id=perfis></div></div>
-
-<h2>🔫 CONFIGURAR POR ARMA</h2>
-<div class="box" style=margin:0 14px><div class=armas id=armas></div></div>
-
-<div class=painel>
-  <div>
-    <h2>🌐 USUÁRIOS CONECTADOS NO MUNDO</h2>
-    <div class=mapa id=mapa></div>
-    <h2>📜 LOGS AO VIVO</h2>
-    <div class=log id=log></div>
-  </div>
-  <div>
-    <h2>⚙️ CONTROLES</h2>
-    <div class=box>
-      <button class="btn" id=btcapa onclick=toggle('capa')>🎯 CAPA: LIGADO</button>
-      <button class="btn" id=btab onclick=toggle('ab')>🛡️ ANTI-BAN: LIGADO</button>
-      <div class="t" style=margin-top:10px>⏰ TEMPO RESTANTE DAS 7H</div>
-      <div class=bar><div id=bart></div></div>
-      <div id=txtt style=font-size:12px;margin-top:4px></div>
+<div class=app>
+  <aside class=sidebar>
+    <div class=logo-side>
+      <div class=hex><svg width=18 height=18 viewBox="0 0 24 24" fill=none stroke=#fff stroke-width=2.2><path d="M12 2L3 7v10l9 5 9-5V7z"/><path d="M3 7l9 5 9-5"/></svg></div>
+      <div><div style=font-weight:800>PROXY OKAIDA</div><div style=font-size:10.5px;color:var(--muted);letter-spacing:1.5px>PAINEL v2.2</div></div>
     </div>
-    <h2>📶 COMPARTILHAMENTO WI-FI</h2>
-    <div class=box id=wifibox>
-      <div style=opacity:.7;font-size:11px>Clique em "GERAR CÓDIGO WI-FI" no topo</div>
+    <div class="menu-item ativo" data-aba=dash>📊 Dashboard</div>
+    <div class=menu-item data-aba=controles>🎛️ Controles</div>
+    <div class=menu-item data-aba=perfis>🎯 Perfis</div>
+    <div class=menu-item data-aba=armas>🔫 Por Arma</div>
+    <div class=menu-item data-aba=usuarios>👥 Usuários</div>
+    <div class=menu-item data-aba=logs>📜 Logs Ao Vivo</div>
+    <div class=menu-item data-aba=wifi>📶 Wi-Fi</div>
+    <div class=menu-item data-aba=config>⚙️ Config</div>
+    <div style=position:absolute;bottom:16px;left:18px;right:18px>
+      <div class=card style=padding:12px;margin:0>
+        <div style=font-size:10.5px;color:var(--muted);letter-spacing:1.5px>STATUS</div>
+        <div style=display:flex;align-items:center;gap:8px;margin-top:6px>
+          <span class="tag tag-ligado blink">● AO VIVO</span>
+          <span id=up style=font-size:12px;color:var(--muted)>--:--:--</span>
+        </div>
+      </div>
     </div>
-    <h2>🖥️  MINI JANELA FF</h2>
-    <div class=box>
-      <button class="btn c" onclick="window.open('/overlay','ff','width=260,height=560')">🪟 ABRIR JANELA</button>
-      <div style=font-size:11px;opacity:.7;margin-top:6px>Essa janela fica sobre o Free Fire com todas funções</div>
+  </aside>
+
+  <main>
+    <div class=topbar>
+      <div><div style=font-size:18px;font-weight:800>Olá, <span style=color:var(--roxo2)>Mestre Okaida</span></div><div style=font-size:12px;color:var(--muted)>Sistema Exclusivo · Todos módulos carregados</div></div>
+      <div style=display:flex;gap:10px;align-items:center>
+        <span class="tag tag-info">🔑 ACESSO MESTRE</span>
+        <button class="btn btn-verm" onclick="location='/logout'">🚪 Sair</button>
+      </div>
     </div>
-  </div>
+
+    <div class=conteudo>
+      <section id=dash class="aba ativa">
+        <div class=grid-kpi>
+          <div class=card><div class=card-t>⏱️ Uptime (7h)</div><div id=k-up class=card-val>00:00:00</div><div class=card-sub id=k-up2>0% utilizado</div></div>
+          <div class=card><div class=card-t>🎯 Capas Hoje</div><div id=k-capa class=card-val>0</div></div>
+          <div class=card><div class=card-t>💀 Peito → Cabeça</div><div id=k-peito class=card-val>0</div></div>
+          <div class=card><div class=card-t>📦 Pacotes UDP</div><div id=k-pkt class=card-val>0</div></div>
+          <div class=card><div class=card-t>🔗 Conexões</div><div id=k-con class=card-val>0</div></div>
+          <div class=card><div class=card-t>👥 Online Agora</div><div id=k-on class=card-val>0</div><div class=card-sub id=k-pais>0 países</div></div>
+          <div class=card><div class=card-t>🌐 IPs Únicos</div><div id=k-ips class=card-val>0</div></div>
+          <div class=card><div class=card-t>🛡️ Anti-Ban</div><div class=card-val style=color:#4ade80;-webkit-text-fill-color:#4ade80>20 CAMADAS</div><div class=card-sub><span class="tag tag-ligado">ATIVO</span></div></div>
+        </div>
+        <div class="grid-2" style=margin-top:18px>
+          <div class=card><div style=display:flex;justify-content:space-between;margin-bottom:12px><b>📈 Atividade Ao Vivo</b><span class="tag tag-info">60s</span></div><div id=graf class=graf></div></div>
+          <div class=card><div style=font-weight:700;margin-bottom:12px>🌍 Por País</div><div id=pais class=graf></div></div>
+        </div>
+        <div class="grid-2" style=margin-top:16px>
+          <div class=card><div style=font-weight:700;margin-bottom:12px>⚡ Funções</div><div id=funcoes style=display:grid;gap:8px></div></div>
+          <div class=card>
+            <div style=font-weight:700;margin-bottom:12px>🎯 Perfil Atual</div>
+            <div id=perfil-atual style=font-size:22px;font-weight:800;color:var(--roxo2)>--</div>
+            <div style=margin-top:14px>
+              <div style=font-size:11px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:6px>⏰ Tempo 7h</div>
+              <div style=height:10px;background:#0a0f2e;border-radius:999px;overflow:hidden;border:1px solid var(--borda)><div id=bar style=height:100%;width:0%;background:linear-gradient(90deg,var(--azul),var(--roxo))></div></div>
+              <div id=resta style=font-size:12px;color:var(--muted);margin-top:6px>--:--:--</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id=controles class=aba><h2 style=margin:0 0 14px>🎛️ Controles Gerais</h2><div class=grid-3 id=lista-controles></div></section>
+      <section id=perfis class=aba><h2 style=margin:0 0 14px>🎯 Perfis de Ataque</h2><div class=grid-3 id=lista-perfis></div></section>
+      <section id=armas class=aba><h2 style=margin:0 0 14px>🔫 Por Arma</h2><div class=card><table><thead><tr><th>Arma</th><th>Perfil</th><th style=text-align:right>Ação</th></tr></thead><tbody id=tabela-armas></tbody></table></div></section>
+      <section id=usuarios class=aba><h2 style=margin:0 0 14px>👥 Usuários no Mundo</h2><div class=card><table><thead><tr><th>📍</th><th>🌐 IP</th><th>🎮 Servidor</th><th>📥 Última</th><th>🎯 Tiros</th><th>💀 Capas</th></tr></thead><tbody id=tabela-users></tbody></table></div></section>
+      <section id=logs class=aba><div style=display:flex;justify-content:space-between;margin-bottom:14px><h2 style=margin:0>📜 Logs Ao Vivo</h2><button class="btn btn-sec" onclick=document.getElementById('logbox').innerHTML=''>🗑️ Limpar</button></div><div id=logbox class=logs></div></section>
+      <section id=wifi class=aba><h2 style=margin:0 0 14px>📶 Wi-Fi & Compartilhamento</h2><div class="grid-2"><div class=card><div style=font-weight:700;margin-bottom:10px>Gerar Código 6 Dígitos</div><div style=font-size:12.5px;color:var(--muted);margin-bottom:14px>Válido 7h · Qualquer um conecta digitando ou escaneando o QR</div><button class="btn btn-primary" onclick=gerarWifi()>📶 GERAR NOVO CÓDIGO</button></div><div class=card id=wifi-res><div style=opacity:.6>Clique no botão para gerar</div></div></div></section>
+      <section id=config class=aba><h2 style=margin:0 0 14px>⚙️ Configurações</h2><div class=grid-3>
+        <div class=card><b>🔐 Chave Mestra</b><div style=font-family:monospace;color:var(--roxo2);margin-top:6px>okaida2026</div></div>
+        <div class=card><b>⏰ Sessão Máxima</b><div style=font-size:22px;font-weight:800;margin-top:6px>7 HORAS</div></div>
+        <div class=card><b>🛡️ Anti-Ban</b><div style=font-size:22px;font-weight:800;color:#4ade80;margin-top:6px>20 CAMADAS</div></div>
+        <div class=card><b>🌐 Região</b><div style=font-size:22px;font-weight:800;margin-top:6px>🇧🇷 BRASIL</div></div>
+        <div class=card><b>🧦 SOCKS5</b><div style=font-family:monospace;margin-top:6px>0.0.0.0:1080</div></div>
+        <div class=card><b>🚀 UDP</b><div style=font-family:monospace;margin-top:6px>0.0.0.0:1081</div></div>
+      </div></section>
+    </div>
+  </main>
 </div>
 
-<script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
 <script>
 const K="{{ key }}";
-const PERFIS={{ stats.perfis|tojson }};
-const ARMAS={{ stats.armas|tojson }};
-const ws=io();let S={{ stats|tojson }},logs=[];
+const PERFIS={{ stats.perfis|tojson }} || {};
+const ARMAS={{ stats.armas|tojson }} || ["MP40","SCAR","AK47","M4A1","AWM","M1887","M1014","UMP","XM8","FAMAS","GROZA","SG12","AUG"];
+const POR_ARMA={{ stats.por_arma|tojson }} || {};
+let S={{ stats|tojson }} || {};
+let LOGS=[],grafPkt=[],grafTime=[],g1,g2;
 
-function fmt(n){return Number(n||0).toLocaleString('pt-BR')}
-function kpis(){
-  document.getElementById('kpis').innerHTML=`
-    <div class=card><div class=t>⏱ UPTIME</div><div class="v c" id=up2>${S.uptime.texto}</div></div>
-    <div class=card><div class=t>🎯 CAPAS</div><div class="v y">${fmt(S.capa)}</div></div>
-    <div class=card><div class=t>💀 PEITO→CABEÇA</div><div class="v m">${fmt(S.peito)}</div></div>
-    <div class=card><div class=t>🚀 PACOTES UDP</div><div class=v>${fmt(S.udp.p)}</div></div>
-    <div class=card><div class=t>📦 BYTES</div><div class="v c">${Math.round((S.tcp.b+S.udp.b)/1024)} KB</div></div>
-    <div class=card><div class=t>🔗 CONEXÕES</div><div class=v>${S.tcp.c+S.udp.c}</div></div>
-    <div class=card><div class=t>🌐 SERVIDORES FF</div><div class="v m">${Object.keys(S.servidores||{}).length}</div></div>
-    <div class=card><div class=t>👥 USUÁRIOS</div><div class="v y">${S.usuarios.length}</div></div>`;
-  document.getElementById('up').textContent=S.uptime.texto;
-  document.getElementById('up2').textContent=S.uptime.texto;
-  document.getElementById('ip').textContent=S.ip_local;
-  document.getElementById('bart').style.width=S.uptime.porcento+'%';
-  document.getElementById('txtt').textContent=`Restam ${S.uptime.texto} de ${7}h`;
+document.querySelectorAll('.menu-item').forEach(m=>m.onclick=()=>{
+  document.querySelectorAll('.menu-item').forEach(x=>x.classList.remove('ativo'));
+  document.querySelectorAll('.aba').forEach(x=>x.classList.remove('ativa'));
+  m.classList.add('ativo');document.getElementById(m.dataset.aba).classList.add('ativa');
+  if(m.dataset.aba==='controles')renderControles();
+  if(m.dataset.aba==='perfis')renderPerfis();
+  if(m.dataset.aba==='armas')renderArmas();
+  if(m.dataset.aba==='usuarios')renderUsers();
+});
+
+function log(tipo,texto){
+  const d=new Date();const t=`${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}:${String(d.getSeconds()).padStart(2,'0')}`;
+  const cls={OK:'ok',ER:'er',INFO:'info',AV:'av'}[tipo]||'info';
+  LOGS.unshift({t,tipo,cls,texto});if(LOGS.length>200)LOGS.pop();
+  const el=document.getElementById('logbox');if(!el)return;
+  el.innerHTML=LOGS.slice(0,120).map(l=>`<div class="l ${l.cls}"><span class=t>[${l.t}]</span>${l.texto}</div>`).join('');
 }
-function render_perfis(){
-  const el=document.getElementById('perfis');el.innerHTML='';
-  for(const[id,p] of Object.entries(PERFIS)){
-    const b=document.createElement('button');b.className='btn'+(id===S.perfil_chave?' on':'');
-    b.textContent=p.nome;b.onclick=()=>fetch('/api/perfil/'+id,{headers:{'X-Key':K}}).then(()=>{S.perfil_chave=id;render_perfis()});
-    el.appendChild(b);
-  }
+
+const FUNCOES=[
+  {id:'CAPA_NO_AR',nome:'🚀 Capa no Ar',desc:'Atira pra cima → mata na cabeça',p:true},
+  {id:'ATRAVES_PAREDE',nome:'🎯 Capa Atrás da Parede',desc:'Atravessa obstáculos',p:true},
+  {id:'AVIAO_RAPIDO',nome:'🪂 Avião 3x Rápido',desc:'Cai mais rápido do avião'},
+  {id:'NO_SPREAD',nome:'🎯 0 Spread',desc:'Toda bala no mesmo lugar'},
+  {id:'SEM_RECOIL',nome:'🎯 0 Recoil',desc:'Mira não sobe'},
+  {id:'BALA_RÁPIDA',nome:'⚡ Bala Rápida',desc:'+100% velocidade'},
+  {id:'AIMBOT_SUAVE',nome:'🎯 Aimbot Suave',desc:'Mira humana na cabeça'},
+  {id:'FOV_AMPLIADO',nome:'👀 FOV Ampliado',desc:'Vê mais inimigos'},
+  {id:'DANO_MÁXIMO',nome:'💀 Dano Máximo',desc:'+120% dano',p:true},
+  {id:'TIRO_PERFURANTE',nome:'⚡ Tiro Perfurante',desc:'Atravessa 6 inimigos',p:true},
+  {id:'SUPER_PULO',nome:'🦘 Super Pulo',desc:'2.4x mais alto'},
+  {id:'SEM_QUEDA',nome:'🦶 Sem Queda',desc:'Nunca toma dano de queda'},
+  {id:'VELOCIDADE',nome:'🏃 Velocidade',desc:'Corre 55% mais rápido'},
+  {id:'AUTO_PULO',nome:'🦘 Auto Pulo',desc:'Pula sozinho nas beiradas'},
+  {id:'SILENCIADOR',nome:'🔇 Silenciador Auto',desc:'Ninguém ouve seus tiros'},
+];
+
+function renderControles(){
+  const el=document.getElementById('lista-controles');if(!el)return;
+  const f=S.flags||{};
+  el.innerHTML=FUNCOES.map(x=>`
+    <div class=card style=padding:14px;display:flex;align-items:center;justify-content:space-between;gap:10px>
+      <div style=min-width:0>
+        <div style=font-weight:700>${x.nome} ${x.p?'<span class="tag tag-desl" style=margin-left:6px>⚠️ CUIDADO</span>':''}</div>
+        <div style=font-size:12px;color:var(--muted);margin-top:2px>${x.desc}</div>
+      </div>
+      <div class="toggle ${f[x.id]?'on':''}" onclick=toggle('${x.id}',this)></div>
+    </div>`).join('');
 }
-function render_armas(){
-  const el=document.getElementById('armas');el.innerHTML='';
-  const atual=S.por_arma||{};
-  for(const a of ARMAS){
-    const b=document.createElement('button');
-    const ligado=(atual[a]||'SO_CAPA')!=='DESLIGADO';
-    b.className='btn'+(ligado?' on':' r');
-    b.innerHTML=`<b>${a}</b><br><span style=font-size:9px>${atual[a]||'SO_CAPA'}</span>`;
-    b.onclick=()=>{
-      const p=prompt(`Perfil para ${a}?\\n${Object.keys(PERFIS).join(' / ')}`,atual[a]||'SO_CAPA');
-      if(!p)return;
-      fetch('/api/arma/'+a+'/'+p,{headers:{'X-Key':K}}).then(()=>atual[a]=p,render_armas());
-    };
-    el.appendChild(b);
-  }
+
+function renderPerfis(){
+  const el=document.getElementById('lista-perfis');if(!el)return;
+  const lista=[
+    {k:'SO_CAPA',n:'🎯 SÓ CAPA',d:'Tudo na cabeça · 100% headshot',c:'#7c3aed'},
+    {k:'PESCOCO',n:'🎯 PESCOÇO',d:'Meio termo · difícil detectar',c:'#38bdf8'},
+    {k:'PEITO',n:'💀 PEITO → CABEÇA',d:'Converte peito em cabeça',c:'#22c55e'},
+    {k:'PE',n:'🦶 SÓ PÉ',d:'Tudo no pé · troll',c:'#f59e0b'},
+    {k:'MAX',n:'⚡ PROXY MAX',d:'Tudo ligado · máximo dano',c:'#ef4444'},
+    {k:'RANKED',n:'🏆 RANQUEADA SEGURA',d:'Anti-ban forte · discreto',c:'#8b5cf6'},
+  ];
+  el.innerHTML=lista.map(x=>`
+    <div class=card style=cursor:pointer;border-left:3px solid ${x.c} onclick=perfil('${x.k}')>
+      <div style=font-weight:800;font-size:16px>${x.n}</div>
+      <div style=font-size:12.5px;color:var(--muted);margin-top:4px>${x.d}</div>
+      <div style=margin-top:10px><span class="tag tag-info">▶ CLICAR PRA ATIVAR</span></div>
+    </div>`).join('');
 }
-function render_mapa(){
-  const m=document.getElementById('mapa');m.innerHTML='';
-  const lugares=[[30,40,'BR'],[60,30,'US'],[45,70,'EU'],[20,60,'AF'],[75,75,'AS'],[50,55,'BR'],[35,20,'BR'],[65,60,'JP']];
-  (S.usuarios||[]).slice(0,8).forEach((u,i)=>{
-    const [x,y,p]=lugares[i%lugares.length];
-    const d=document.createElement('div');d.className='ponto';
-    d.style.left=x+'%';d.style.top=y+'%';d.title=u.ip+' → '+u.servidor;
-    m.appendChild(d);
+
+function renderArmas(){
+  const el=document.getElementById('tabela-armas');if(!el)return;
+  const perfis_opts=['SO_CAPA','PESCOCO','PEITO','PE','MAX','RANKED'];
+  el.innerHTML=ARMAS.map(a=>`
+    <tr><td style=font-weight:600>${a}</td>
+    <td><span class="tag tag-info">${POR_ARMA[a]||'SO_CAPA'}</span></td>
+    <td style=text-align:right><select onchange="arma('${a}',this.value)" class=btn-sec style=padding:6px 10px;border-radius:6px;background:#0a0f2e;color:#fff;border:1px solid var(--borda)>
+      ${perfis_opts.map(p=>`<option value=${p} ${POR_ARMA[a]===p?'selected':''}>${p}</option>`).join('')}
+    </select></td></tr>`).join('');
+}
+
+function renderUsers(){
+  const el=document.getElementById('tabela-users');if(!el)return;
+  const u=(S.usuarios||{}).ultimos_20||[];
+  el.innerHTML=u.length?u.map(x=>`<tr><td>${x.flag||'🌍'} ${x.nome_pais||x.pais||'-'}</td><td style=font-family:monospace>${x.ip||'-'}</td><td>${x.servidor_ff||'-'}</td><td style=color:var(--muted)>${x.ultima_vez?new Date(x.ultima_vez*1000).toLocaleTimeString('pt-BR'):'-'}</td><td>${x.tiros||0}</td><td>${x.capas||0}</td></tr>`).join(''):`<tr><td colspan=6 style=text-align:center;padding:30px;color:var(--muted)>Nenhum usuário conectado ainda</td></tr>`;
+}
+
+function toggle(id,el){
+  const v=el.classList.toggle('on')?1:0;
+  fetch(`/api/flags/${id}/${v}`).then(r=>r.json()).then(()=>{
+    log(v?'OK':'INFO',`${FUNCOES.find(f=>f.id===id)?.nome||id} → ${v?'LIGADO':'DESLIGADO'}`);
+    S.flags=S.flags||{};S.flags[id]=!!v;
   });
 }
-function addlog(t){
-  logs.unshift(t);if(logs.length>60)logs.pop();
-  document.getElementById('log').textContent=logs.join('\n');
-}
-function toggle(q){
-  fetch('/api/'+(q==='capa'?'capa':'antiban')+'/toggle',{headers:{'X-Key':K}}).then(r=>r.json()).then(d=>{
-    document.getElementById('bt'+q).textContent=(q==='capa'?'🎯 CAPA: ':'🛡️ ANTI-BAN: ')+(d.ativo?'LIGADO':'DESLIGADO');
-  });
-}
-function wifi(){
-  fetch('/api/wifi/novo',{headers:{'X-Key':K}}).then(r=>r.json()).then(d=>{
-    document.getElementById('wifibox').innerHTML=`
+function perfil(k){fetch(`/api/perfil/${k}`).then(()=>{log('OK',`Perfil alterado → ${k}`);S.perfil_chave=k});}
+function arma(a,p){fetch(`/api/arma/${a}/${p}`).then(()=>{log('OK',`${a} → ${p}`);POR_ARMA[a]=p});}
+function gerarWifi(){
+  fetch('/api/wifi/novo').then(r=>r.json()).then(d=>{
+    if(!d.ok)return;
+    document.getElementById('wifi-res').innerHTML=`
       <div style=text-align:center>
-        <div class=qr><img src="data:image/png;base64,${d.qr_wifi.qr_b64}"></div>
-        <div style=margin-top:8px><b style=color:#ff0;font-size:22px;letter-spacing:6px>${d.dados.codigo}</b></div>
-        <div style=font-size:11px;opacity:.7>📶 ${d.qr_wifi.ssid}<br>🔑 ${d.qr_wifi.senha}<br>⏰ ${d.dados.horas}h</div>
-        <div class=qr style=margin-top:8px><img src="data:image/png;base64,${d.qr_proxy_b64}"></div>
-        <div style=font-size:10px>socks5://${d.dados.ip}:1080</div>
-        <button class="btn c" style=margin-top:8px onclick="navigator.clipboard.writeText('${d.dados.codigo}')">📋 COPIAR CÓDIGO</button>
+        <div style=font-size:11px;letter-spacing:2px;color:var(--muted);text-transform:uppercase>Código Wi-Fi</div>
+        <div style=font-size:48px;font-weight:900;letter-spacing:14px;color:var(--roxo2);margin:8px 0>${d.dados.codigo}</div>
+        <div style=display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin-top:10px>
+          <div><div style=font-size:11px;color:var(--muted);margin-bottom:4px>📱 Escanear Wi-Fi</div><img src="${d.qr_wifi}" style=width:140px;border-radius:10px;border:1px solid var(--borda)></div>
+          <div><div style=font-size:11px;color:var(--muted);margin-bottom:4px>🔗 Conectar Proxy</div><img src="${d.qr_proxy_b64}" style=width:140px;border-radius:10px;border:1px solid var(--borda)></div>
+        </div>
+        <div style=margin-top:12px><span class="tag tag-ligado">✅ VÁLIDO 7 HORAS</span></div>
       </div>`;
-    addlog(`📶 NOVO CÓDIGO WI-FI: ${d.dados.codigo} · IP ${d.dados.ip}`);
+    log('OK',`Código Wi-Fi gerado: ${d.dados.codigo}`);
   });
 }
-function abrirff(){fetch('/api/virus/abrir_ff',{headers:{'X-Key':K}}).then(()=>addlog('🚀 ABRINDO FREE FIRE...'));}
-function injetar(){fetch('/api/virus/injetar',{headers:{'X-Key':K}}).then(r=>r.json()).then(d=>addlog('⚡ PROXY INJETADO → '+d.ip));}
 
-ws.on('stats',d=>{S=d;kpis();render_mapa();});
-ws.on('connect',()=>addlog('✅ WS CONECTADO'));
-kpis();render_perfis();render_armas();render_mapa();
-addlog('🕵️ SISTEMA PROXY OKAIDA CARREGADO');
-addlog('🔑 CHAVE: '+K.substring(0,6)+'...');
-</script></body></html>
+function atualiza(){
+  const u=S.uptime||{};
+  document.getElementById('k-up').textContent=u.texto||'00:00:00';
+  document.getElementById('up').textContent=u.texto||'';
+  document.getElementById('k-up2').textContent=(u.porcento||0)+'% utilizado';
+  document.getElementById('bar').style.width=(u.porcento||0)+'%';
+  document.getElementById('resta').textContent=(u.porcento||0)<100?u.texto+' de 7h':'⏰ Expirado';
+  document.getElementById('k-capa').textContent=(S.capa||0).toLocaleString('pt-BR');
+  document.getElementById('k-peito').textContent=(S.peito||0).toLocaleString('pt-BR');
+  document.getElementById('k-pkt').textContent=((S.udp||{}).p||0).toLocaleString('pt-BR');
+  document.getElementById('k-con').textContent=((S.tcp||{}).c||0)+((S.udp||{}).c||0);
+  const us=S.usuarios||{};
+  document.getElementById('k-on').textContent=us.online_agora||0;
+  document.getElementById('k-ips').textContent=us.ips_unicos_total||0;
+  document.getElementById('k-pais').textContent=(us.paises_distintos||0)+' países';
+  document.getElementById('perfil-atual').textContent=S.perfil_atual||PERFIS[S.perfil_chave]?.nome||'SO_CAPA';
+  grafTime.push(new Date().toLocaleTimeString('pt-BR'));
+  grafPkt.push(((S.udp||{}).p||0)%1000);
+  if(grafTime.length>30){grafTime.shift();grafPkt.shift()}
+  if(g1)g1.setOption({xAxis:{data:grafTime},series:[{data:grafPkt}]});
+  const fu=document.getElementById('funcoes');if(fu && !fu.innerHTML)renderControles();
+}
+
+// Gráficos
+function initGraficos(){
+  const st=getComputedStyle(document.documentElement);
+  const roxo=st.getPropertyValue('--roxo').trim()||'#7c3aed';
+  const azul=st.getPropertyValue('--azul').trim()||'#38bdf8';
+  g1=echarts.init(document.getElementById('graf'));
+  g1.setOption({backgroundColor:'transparent',tooltip:{trigger:'axis'},grid:{left:40,right:20,top:20,bottom:30},
+    xAxis:{type:'category',data:[],axisLine:{lineStyle:{color:'#312e81'}},axisLabel:{color:'#94a3b8'}},
+    yAxis:{type:'value',splitLine:{lineStyle:{color:'#1e1b4b'}},axisLabel:{color:'#94a3b8'}},
+    series:[{type:'line',smooth:true,data:[],lineStyle:{color:roxo,width:3},areaStyle:{color:{type:'linear',x:0,y:0,x2:0,y2:1,colorStops:[{offset:0,color:roxo+'cc'},{offset:1,color:roxo+'00'}]}}}]});
+  g2=echarts.init(document.getElementById('pais'));
+  const top=(S.usuarios||{}).top_paises||[];
+  g2.setOption({backgroundColor:'transparent',tooltip:{},legend:{bottom:0,textStyle:{color:'#94a3b8'}},
+    series:[{type:'pie',radius:['40%','70%'],data:top.length?top.map((t,i)=>({name:t.p,value:t.q,itemStyle:{color:[roxo,azul,'#22c55e','#f59e0b','#ef4444','#8b5cf6','#06b6d4'][i%7]}})):[{name:'Aguardando...',value:1,itemStyle:{color:'#1e1b4b'}}],
+    label:{color:'#e2e8f0'}}]});
+  addEventListener('resize',()=>{g1.resize();g2.resize()});
+}
+
+// Socket Ao Vivo
+try{
+  const s=io();
+  s.on('stats',d=>{S=d;atualiza()});
+  s.on('log',d=>log(d.tipo,d.texto));
+  s.on('connect',()=>log('OK','✅ Painel conectado ao servidor'));
+  s.on('disconnect',()=>log('AV','⚠️ Conexão perdida, reconectando...'));
+}catch(e){}
+
+setTimeout(()=>{initGraficos();atualiza();log('INFO','🕵️ Painel Okaida carregado');log('OK','🛡️ Anti-Ban 20 camadas ativo');log('INFO','🎯 Pronto para receber conexões')},200);
+setInterval(()=>fetch('/api/st').then(r=>r.json()).then(d=>{S=d;atualiza()}),3000);
+</script>
+</body></html>
