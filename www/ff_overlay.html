@@ -1,44 +1,123 @@
-
-    <!doctype html><html><head><meta charset=utf-8>
-    <style>
-    *{margin:0;padding:0;box-sizing:border-box}
-    #ffmenu{position:fixed;top:80px;left:10px;width:220px;background:#000c;color:#0f0;border:1px solid #0f08;
-      font-family:monospace;font-size:11px;z-index:999999;border-radius:8px;backdrop-filter:blur(4px);
-      box-shadow:0 0 20px #0f05;user-select:none}
-    #ffmenu .t{padding:8px;background:#0f01;border-bottom:1px solid #0f05;font-weight:bold;letter-spacing:2px;cursor:move}
-    #ffmenu .bt{display:block;width:100%;padding:7px 10px;background:transparent;color:#0f0;border:0;border-bottom:1px solid #0f03;
-      text-align:left;font-family:monospace;font-size:11px;cursor:pointer}
-    #ffmenu .bt:hover{background:#0f02;color:#fff}
-    #ffmenu .bt.on{background:#0f03;color:#ff0}
-    #ffmenu .st{padding:6px 10px;font-size:10px;opacity:.8}
-    </style></head><body>
-    <div id=ffmenu>
-      <div class=t>🕵️ PROXY OKAIDA</div>
-      <button class="bt on" data-p=SO_CABEÇA>🎯 SÓ CABEÇA</button>
-      <button class="bt" data-p=PESCOÇO>🎯 PESCOÇO</button>
-      <button class="bt" data-p=SO_CAPA>🏆 SÓ CAPA</button>
-      <button class="bt" data-p=CABEÇA_PEITO>🎯 CABEÇA+PEITO</button>
-      <button class="bt" data-p=SÓ_PEITO>🛡️ SÓ PEITO</button>
-      <button class="bt" data-p=PÉ>🦶 SÓ PÉ</button>
-      <button class="bt" data-p=PROXY_MAX>⚡ PROXY MÁXIMO</button>
-      <div class=t style=margin-top:4px>🔫 POR ARMA</div>
-      <button class="bt" data-a=TODAS>✅ TODAS ARMAS</button>
-      <button class="bt" data-a=MP40>🔫 MP40</button>
-      <button class="bt" data-a=M1014>🔫 M1014</button>
-      <button class="bt" data-a=SCAR>🔫 SCAR</button>
-      <button class="bt" data-a=AK47>🔫 AK47</button>
-      <button class="bt" data-a=AWM>🎯 AWM</button>
-      <div class=st id=st>CAPA: 0 | CONEXÕES: 0 | PING: --</div>
+<!doctype html><html><head><meta charset=utf-8>
+<meta name=viewport content="width=device-width,initial-scale=1,user-scalable=no">
+<title>🪟 OKAIDA MINI</title>
+<script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{
+  --bg:#050816cc;--card:#0d1338ee;--borda:#312e81;
+  --roxo:#7c3aed;--azul:#38bdf8;--vermelho:#ef4444;--verde:#22c55e;--texto:#fff;--muted:#94a3b8
+}
+html,body{background:transparent;font-family:system-ui,sans-serif;color:var(--texto);font-size:12px;overflow:hidden}
+.janela{position:fixed;top:8px;right:8px;width:min(320px,96vw);background:var(--bg);backdrop-filter:blur(14px);border:1px solid var(--borda);border-radius:14px;box-shadow:0 20px 60px #00000088;z-index:99999;user-select:none}
+.topo{display:flex;align-items:center;justify-content:space-between;padding:8px 10px;border-bottom:1px solid var(--borda);cursor:move}
+.topo .t{font-weight:800;letter-spacing:.5px;font-size:12px;background:linear-gradient(90deg,#fff,#c4b5fd);-webkit-background-clip:text;background-clip:text;color:transparent}
+.topo .botoes{display:flex;gap:4px}
+.min{width:18px;height:18px;border-radius:50%;background:#f59e0b;border:0;cursor:pointer}
+.fecha{width:18px;height:18px;border-radius:50%;background:var(--vermelho);border:0;cursor:pointer}
+.corpo{padding:8px;max-height:70vh;overflow:auto}
+.linha{display:flex;align-items:center;justify-content:space-between;padding:6px 4px;border-bottom:1px solid #1a1f4a}
+.linha:last-child{border:0}
+.linha .n{font-weight:600;font-size:11.5px}
+.linha .n small{display:block;color:var(--muted);font-weight:400;font-size:10px;margin-top:1px}
+.tg{position:relative;width:34px;height:18px;background:#1e1b4b;border-radius:999px;cursor:pointer;flex-shrink:0}
+.tg::after{content:"";position:absolute;width:14px;height:14px;background:#64748b;border-radius:50%;top:2px;left:2px;transition:.15s}
+.tg.on{background:linear-gradient(135deg,var(--roxo),var(--azul))}
+.tg.on::after{left:18px;background:#fff}
+.tg.vermelho.on{background:linear-gradient(135deg,#7f1d1d,var(--vermelho))}
+.big{margin-top:6px;padding:8px;border-radius:10px;background:linear-gradient(135deg,#7f1d1d,#ef4444);text-align:center;font-weight:900;letter-spacing:1px;cursor:pointer;font-size:12px;box-shadow:0 0 20px #ef444455}
+.big.off{background:#1e1b4b;color:var(--muted);box-shadow:none}
+.acoes{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px}
+.btn{padding:7px;border-radius:8px;border:0;font-weight:700;font-size:11px;cursor:pointer;color:#fff}
+.btn.ff{background:linear-gradient(135deg,var(--azul),var(--roxo))}
+.btn.wifi{background:linear-gradient(135deg,#0ea5e9,#22c55e)}
+.btn.off{background:#1e1b4b;color:var(--muted)}
+.kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;margin-bottom:6px}
+.kpi{background:#0a0f2ecc;border:1px solid var(--borda);border-radius:8px;padding:4px;text-align:center}
+.kpi .v{font-weight:900;font-size:13px}
+.kpi .l{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:1px}
+.arrasta{opacity:.5;font-size:10px;text-align:center;padding:2px;color:var(--muted)}
+</style></head><body>
+<div class=janela id=j>
+  <div class=topo id=h><div class=t>🪟 OKAIDA · MINI</div><div class=botoes><button class=min id=min></button><button class=fecha onclick=document.body.innerHTML=''></button></div></div>
+  <div class=corpo id=c>
+    <div class=kpis>
+      <div class=kpi><div class=v id=kup>--:--</div><div class=l>UPTIME</div></div>
+      <div class=kpi><div class=v id=kc>0</div><div class=l>CAPAS</div></div>
+      <div class=kpi><div class=v id=kon>0</div><div class=l>ONLINE</div></div>
     </div>
-    <script>
-    const ws = new WebSocket((location.protocol==='https:'?'wss://':'ws://')+location.host+'/ws');
-    ws.onmessage=e=>{const d=JSON.parse(e.data);document.getElementById('st').textContent=
-      `CAPA: ${d.capa} | CONEX: ${d.udp.c+d.tcp.c} | SRV: ${Object.keys(d.srv||{}).length}`};
-    document.querySelectorAll('.bt[data-p]').forEach(b=>b.onclick=()=>{
-      document.querySelectorAll('.bt[data-p]').forEach(x=>x.classList.remove('on'));b.classList.add('on');
-      fetch('/api/perfil/'+b.dataset.p,{headers:{'X-Key':localStorage.k||''}});
-    });
-    document.querySelectorAll('.bt[data-a]').forEach(b=>b.onclick=()=>{
-      fetch('/api/arma/'+b.dataset.a+'/'+(b.classList.toggle('on')?'SO_CAPA':'DESLIGADO'),{headers:{'X-Key':localStorage.k||''}});
-    });
-    </script></body></html>
+    <div id=funcoes></div>
+    <div class="big off" id=fv onclick=fullVermelho()>🔴 FULL VERMELHO · DESLIGADO</div>
+    <div class=acoes>
+      <button class="btn ff" onclick=abrirFF()>🎮 ABRIR FF</button>
+      <button class="btn wifi" onclick=gerarWifi()>📶 WI-FI 6D</button>
+      <button class="btn off" onclick=location.reload()>🔄 ATUALIZAR</button>
+      <button class="btn off" onclick=desativarProxy()>🛑 SEM PROXY</button>
+    </div>
+    <div class=arrasta>↕️ arraste o topo para mover</div>
+  </div>
+</div>
+<script>
+const FUN=[
+  {id:'CAPA_NO_AR',n:'🚀 Capa no Ar',s:'atira p/ cima → cabeça',v:false},
+  {id:'ATRAVES_PAREDE',n:'🎯 Capa Parede',s:'atravessa tudo',v:false},
+  {id:'AVIAO_RAPIDO',n:'🪂 Avião 3x',s:'cai + rápido',v:true},
+  {id:'NO_SPREAD',n:'🎯 0 Spread',s:'bala no ponto',v:true},
+  {id:'SEM_RECOIL',n:'🎯 0 Recoil',s:'mira não sobe',v:true},
+  {id:'BALA_RÁPIDA',n:'⚡ Bala Rápida',s:'+100% vel',v:true},
+  {id:'AIMBOT_SUAVE',n:'🎯 Aimbot',s:'mira humana',v:true},
+  {id:'FOV_AMPLIADO',n:'👀 FOV +',s:'vê + inimigos',v:true},
+  {id:'DANO_MÁXIMO',n:'💀 Dano Máx',s:'+120% dano',v:false,vermelho:true},
+  {id:'TIRO_PERFURANTE',n:'⚡ Perfurante',s:'atravessa 6',v:false,vermelho:true},
+  {id:'SUPER_PULO',n:'🦘 Super Pulo',s:'2.4x +alto',v:false},
+  {id:'SEM_QUEDA',n:'🦶 Sem Queda',s:'0 dano queda',v:true},
+  {id:'VELOCIDADE',n:'🏃 Velocidade',s:'+55% corrida',v:false},
+  {id:'SILENCIADOR',n:'🔇 Silenciador',s:'ninguém ouve',v:false},
+  {id:'NIVEL_MUNDIAL',n:'🌍 Nível Mundial',s:'só capa absoluta',v:false,vermelho:true},
+];
+let FV=false,io;
+function render(){
+  document.getElementById('funcoes').innerHTML=FUN.map(f=>`
+    <div class=linha><div class=n>${f.n}<small>${f.s}</small></div>
+    <div class="tg ${f.v?'on':''} ${f.vermelho?'vermelho':''}" onclick=tog('${f.id}',this)></div></div>`).join('');
+  const b=document.getElementById('fv');
+  b.className='big '+(FV?'':'off');
+  b.innerHTML=FV?'🔴 FULL VERMELHO · LIGADO · NÍVEL MUNDIAL':'🔴 FULL VERMELHO · DESLIGADO';
+}
+function tog(id,el){
+  const f=FUN.find(x=>x.id===id);f.v=el.classList.toggle('on');
+  fetch(`/api/flags/${id}/${f.v?1:0}`);
+  if(id==='NIVEL_MUNDIAL') fetch(`/api/fullvermelho/${f.v?10:0}`);
+}
+function fullVermelho(){
+  FV=!FV;
+  fetch(`/api/fullvermelho/${FV?10:0}`).then(()=>{
+    FUN.find(x=>x.id==='NIVEL_MUNDIAL').v=FV;
+    FUN.find(x=>x.id==='DANO_MÁXIMO').v=FV;
+    FUN.find(x=>x.id==='TIRO_PERFURANTE').v=FV;
+    FUN.find(x=>x.id==='CAPA_NO_AR').v=FV;
+    FUN.find(x=>x.id==='ATRAVES_PAREDE').v=FV;
+    render();
+  });
+}
+function abrirFF(){fetch('/api/virus/abrir_ff')}
+function gerarWifi(){fetch('/api/wifi/novo').then(r=>r.json()).then(d=>{if(d.ok)alert('✅ WI-FI CÓDIGO: '+d.dados.codigo)})}
+function desativarProxy(){fetch('/api/virus/desativar_proxy')}
+function stats(s){
+  document.getElementById('kup').textContent=(s.uptime||{}).texto||'--:--';
+  document.getElementById('kc').textContent=s.capa||0;
+  document.getElementById('kon').textContent=(s.usuarios||{}).online_agora||0;
+}
+try{
+  io=io();io.on('stats',stats);
+  io.on('connect',()=>io.emit('comando',{a:'mini_janela'}));
+}catch(e){}
+// Arrastar
+const j=document.getElementById('j'),h=document.getElementById('h');
+let dx=0,dy=0,mv=false;
+h.ontouchstart=h.onmousedown=e=>{mv=true;const p=e.touches?e.touches[0]:e;dx=p.clientX-j.offsetLeft;dy=p.clientY-j.offsetTop};
+document.ontouchmove=document.onmousemove=e=>{if(!mv)return;const p=e.touches?e.touches[0]:e;j.style.left=(p.clientX-dx)+'px';j.style.top=(p.clientY-dy)+'px';j.style.right='auto'};
+document.ontouchend=document.onmouseup=()=>mv=false;
+document.getElementById('min').onclick=()=>{const c=document.getElementById('c');c.style.display=c.style.display==='none'?'block':'none'};
+render();
+</script></body></html>

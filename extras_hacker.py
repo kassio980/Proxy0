@@ -485,3 +485,108 @@ def processar_completo(dados, ip_origem=None, eh_tiro=False, geo=None, servidor_
     return dados
 
 print("✅ 5B-B carregado: Avião + 15 funções + Pipeline")
+
+# ==========================================================
+# 🌍 SISTEMA SÓ CAPA — NÍVEL MUNDIAL
+#    FULL VERMELHO · CONVERSÃO 100% · ANTI DETECÇÃO TOTAL
+# ==========================================================
+NIVEL_FULLVERMELHO = 0   # 0..10 (10 = MÁXIMO)
+MODO_NIVEL_MUNDIAL = False
+
+class NivelMundial:
+    """
+    🌍 NÍVEL MUNDIAL = SÓ CAPA ABSOLUTA
+    ✅ Qualquer tiro = cabeça (corpo, braço, pé, parede, céu → tudo cabeça)
+    ✅ Dano máximo + quebra escudo
+    ✅ Anti reajuste do servidor
+    ✅ Frequência inteligente pra não pegar flag
+    ✅ SÓ ATIVA SE LIGAR NA MINI JANELA / PAINEL
+    """
+    def __init__(self):
+        self.conversoes = 0
+        self.ultimo_ajuste = 0
+        self.semente = 0x0KA1DA
+
+    def _forca(self):
+        """Retorna força atual conforme nível (0..1)"""
+        return min(1.0, NIVEL_FULLVERMELHO / 10.0)
+
+    def set_nivel(self, n):
+        global NIVEL_FULLVERMELHO, MODO_NIVEL_MUNDIAL
+        NIVEL_FULLVERMELHO = max(0, min(10, int(n)))
+        MODO_NIVEL_MUNDIAL = NIVEL_FULLVERMELHO >= 8
+        return {"nivel": NIVEL_FULLVERMELHO, "mundial": MODO_NIVEL_MUNDIAL, "forca": self._forca()}
+
+    def processar_tiro(self, dados, alvo_cabeca_x, alvo_cabeca_y, alvo_cabeca_z):
+        """
+        🔥 A MAGIA ACONTECE AQUI 🔥
+        Recebe o tiro original, retorna tiro APONTADO EXATO NA CABEÇA
+        """
+        if not dados or len(dados) < 44: return dados
+        f = self._forca()
+        if f <= 0: return dados
+        try:
+            ass = __import__('struct').unpack_from("<H", dados, 0)[0]
+            if ass not in (0x0413, 0x0817, 0x0C21, 0x102B): return dados
+
+            # Anti-detecção: 5% dos tiros deixa passar normal (nível < 10)
+            if NIVEL_FULLVERMELHO < 10 and __import__('random').random() < 0.07: return dados
+
+            import struct as _s
+            novo = bytearray(dados)
+
+            # 1. Força ângulo EXATO na cabeça
+            _s.pack_into("<f", novo, 12, float(alvo_cabeca_x))
+            _s.pack_into("<f", novo, 16, float(alvo_cabeca_y) - 0.92)  # altura cabeça
+            _s.pack_into("<f", novo, 20, float(alvo_cabeca_z))
+
+            # 2. Marca HITBOX CABEÇA
+            if len(novo) >= 29: _s.pack_into("<B", novo, 28, 0x01)
+
+            # 3. Zera desvio / spread
+            for o in (24, 26, 28, 30):
+                if len(novo) > o+2: _s.pack_into("<H", novo, o, 0)
+
+            # 4. Dano máximo + quebra escudo (nível >= 6)
+            if NIVEL_FULLVERMELHO >= 6 and len(novo) >= 60:
+                d = _s.unpack_from("<f", novo, 52)[0]
+                _s.pack_into("<f", novo, 52, d * (1.6 + f*2.5))
+
+            # 5. Velocidade da bala instantânea
+            if len(novo) >= 56:
+                a,b,c = _s.unpack_from("<fff", novo, 44)
+                mult = 1.8 + f*2.5
+                _s.pack_into("<fff", novo, 44, a*mult, b*mult, c*mult)
+
+            # 6. Perfurante automático
+            if len(novo) >= 42:
+                _s.pack_into("<B", novo, 40, 3)
+                _s.pack_into("<B", novo, 41, 6)
+
+            # 7. Anti reajuste servidor
+            if len(novo) >= 64:
+                _s.pack_into("<B", novo, 63, (_s.unpack_from("<B",novo,63)[0] & 0xF0) | 0x0A)
+
+            self.conversoes += 1
+            return bytes(novo)
+        except:
+            return dados
+
+    def estatisticas(self):
+        return {
+            "nivel": NIVEL_FULLVERMELHO,
+            "mundial": MODO_NIVEL_MUNDIAL,
+            "forca": round(self._forca()*100,1),
+            "conversoes": self.conversoes
+        }
+
+NM = NivelMundial()
+
+# Expõe pra usar em qualquer lugar
+def set_fullvermelho(n): return NM.set_nivel(n)
+def stats_fullvermelho(): return NM.estatisticas()
+def tiro_nivel_mundial(d, x, y, z): return NM.processar_tiro(d, x, y, z)
+
+# Adiciona na lista de flags global
+try: FLAGS["NIVEL_MUNDIAL"] = MODO_NIVEL_MUNDIAL
+except: pass

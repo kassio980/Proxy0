@@ -77,6 +77,10 @@ def home():
         r.set_cookie("okaida_key", k, max_age=7*86400); return r
     return redirect("/login")
 
+@app.route("/overlay")
+def overlay():
+    return app.send_static_file("ff_overlay.html")
+
 @app.route("/dash")
 def dash():
     if MOD.get("auth"):
@@ -116,6 +120,17 @@ def api_wifi():
 def api_ff():
     ok = MOD["virus_mode"].abrir_free_fire() if MOD["virus_mode"] else False
     return jsonify({"ok":bool(ok)})
+
+@app.route("/api/codigo/<cod>")
+def api_codigo(cod):
+    from wifi_share import validar_codigo
+    u = validar_codigo(cod)
+    return jsonify({"ok":bool(u),"dados":u or {}})
+
+@app.route("/api/fullvermelho/<int:n>")
+def api_fv(n):
+    from extras_hacker import set_fullvermelho, stats_fullvermelho
+    return jsonify({"ok":True, **set_fullvermelho(n), "stats":stats_fullvermelho()})
 
 @app.route("/health")
 def health():
