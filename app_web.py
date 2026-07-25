@@ -152,17 +152,20 @@ if __name__=="__main__":
 
 
 
-# ========== ROTAS DA ABA WI-FI / DEPURAÇÃO ==========
+
 @app.route("/api/virus/conectar_adb")
 @auth.requer_login
 def api_conectar_adb():
-    ip = request.args.get("ip", "").strip()
-    porta = request.args.get("p", "5555")
+    ip = request.args.get("ip", "").strip() or "192.168.1.3"
+    porta = request.args.get("p", "").strip() or "39083"
+    codigo = request.args.get("codigo", "").strip()
     return jsonify({
         "ok": True,
-        "aviso": "Execute esse comando no seu Termux",
-        "comando": f"adb connect {ip}:{porta}",
-        "instrucao": "1. Abra o Termux 2. Cole esse comando 3. Volte ao painel"
+        "aviso": "📝 COPIE E COLE NESSA ORDEM NO TERMUX",
+        "passo1": "adb kill-server && adb start-server",
+        "passo2": f"adb pair {ip}:{porta} {codigo}",
+        "passo3": f"adb connect {ip}:{porta}",
+        "importante": "❌ SEMPRE USE A PORTA DA TELA DO SEU REDMI"
     })
 
 @app.route("/api/virus/abrir_ff")
@@ -170,9 +173,8 @@ def api_conectar_adb():
 def api_abrir_ff():
     return jsonify({
         "ok": True,
-        "aviso": "Funciona quando rodar direto no Termux do celular",
-        "comando": "am start -a android.intent.action.MAIN -c android.intent.category.LAUNCHER -n com.dts.freefireth/com.dts.freefire.MainActivity",
-        "instrucao": "Quando ativado localmente: jogo + janela abrem juntos"
+        "comando": "adb shell am start -a android.intent.action.MAIN -c android.intent.category.LAUNCHER -n com.dts.freefireth/com.dts.freefire.MainActivity",
+        "instrucao": "Só funciona depois que conectou com sucesso"
     })
 
 @app.route("/api/virus/desativar_proxy")
@@ -180,9 +182,8 @@ def api_abrir_ff():
 def api_desativar_proxy():
     return jsonify({
         "ok": True,
-        "aviso": "Para desativar manualmente",
-        "passo1": "Acesse Ajustes > Wi-Fi > clique na rede conectada",
-        "passo2": "Em Proxy escolha NENHUM ou DESLIGADO"
+        "passo1": "Ajustes > Wi-Fi > clique na rede",
+        "passo2": "Proxy > NENHUM / DESLIGADO"
     })
 
 @app.route("/api/fullvermelho/toggle")
@@ -194,4 +195,4 @@ def api_toggle_full():
         novo = 0 if estado else 1
         return jsonify({"ok": True, "ativo": bool(novo), **set_fullvermelho(novo)})
     except Exception:
-        return jsonify({"ok": True, "ativo": True, "mensagem": "Controle funcionando normalmente"})
+        return jsonify({"ok": True, "ativo": True, "mensagem": "Controle OK"})
