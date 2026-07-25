@@ -1,0 +1,176 @@
+<!doctype html><html lang=pt-BR><head><meta charset=utf-8>
+<meta name=viewport content="width=device-width,initial-scale=1">
+<title>🕵️ PROXY OKAIDA — PAINEL</title>
+<style>
+:root{--g:#0f0;--r:#f00;--y:#ff0;--c:#0ff;--m:#f0f;--b:#008cff;--bg:#000}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{background:var(--bg);color:var(--g);font-family:'Courier New',monospace;min-height:100vh;
+  background-image:radial-gradient(#0f02 1px,transparent 1px),linear-gradient(#0f01 1px,transparent 1px);
+  background-size:3px 3px,100% 24px;overflow-x:hidden}
+header{padding:14px 20px;border-bottom:1px solid #0f05;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;background:#000a}
+h1{font-size:18px;letter-spacing:4px;text-shadow:0 0 8px var(--g)}.blink{animation:b 1s steps(2) infinite}@keyframes b{50%{opacity:0}}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;padding:14px}
+.card{border:1px solid #0f05;padding:12px;background:#000a;box-shadow:0 0 10px #0f03 inset}
+.card .t{font-size:10px;letter-spacing:2px;opacity:.7;text-transform:uppercase}
+.card .v{font-size:24px;font-weight:bold;text-shadow:0 0 6px currentColor;margin-top:4px}
+h2{font-size:13px;letter-spacing:3px;color:var(--c);margin:18px 14px 8px;border-bottom:1px dashed #0ff5;padding-bottom:4px}
+.painel{padding:0 14px 30px;display:grid;grid-template-columns:1.2fr .8fr;gap:14px}
+@media(max-width:900px){.painel{grid-template-columns:1fr}}
+.box{border:1px solid #0f05;background:#000a;padding:12px}
+.btn{background:transparent;border:1px solid var(--y);color:var(--y);padding:8px 10px;font-family:monospace;cursor:pointer;margin:3px;font-size:11px;letter-spacing:1px}
+.btn:hover{background:var(--y);color:#000}.btn.on{background:var(--y);color:#000;box-shadow:0 0 12px #ff08}
+.btn.r{border-color:var(--r);color:var(--r)}.btn.r:hover{background:var(--r);color:#fff}
+.btn.c{border-color:var(--c);color:var(--c)}.btn.c:hover{background:var(--c);color:#000}
+.btn.m{border-color:var(--m);color:var(--m)}.btn.m:hover{background:var(--m);color:#000}
+.gridbtns{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:4px}
+.armas{display:grid;grid-template-columns:repeat(auto-fit,minmax(90px,1fr));gap:4px}
+.bar{height:8px;background:#0f02;border:1px solid #0f04;margin-top:6px;overflow:hidden}
+.bar>div{height:100%;background:linear-gradient(90deg,#0f0,#ff0);width:0%;transition:.3s}
+.mapa{height:220px;border:1px solid #0f05;background:
+  radial-gradient(circle at 30% 40%, #0f02 0 2px, transparent 3px),
+  radial-gradient(circle at 60% 30%, #0f02 0 2px, transparent 3px),
+  radial-gradient(circle at 45% 70%, #0f02 0 2px, transparent 3px),
+  #0008;position:relative;overflow:hidden}
+.ponto{position:absolute;width:8px;height:8px;background:#0f0;border-radius:50%;box-shadow:0 0 8px #0f0;animation:p 2s infinite}
+@keyframes p{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(2);opacity:.3}}
+.log{height:220px;overflow:auto;font-size:11px;line-height:1.5;background:#000;border:1px solid #0a3b0a;padding:8px;white-space:pre-wrap}
+.qr{display:inline-block;padding:6px;background:#fff;border:1px solid #0f05}
+.col2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+</style></head><body>
+<header>
+  <div><h1>🕵️ PROXY OKAIDA <span class=blink>_</span></h1>
+  <div style=font-size:11px;opacity:.7>🔑 {{ user.nivel }} · ⏰ <span id=up>--:--:--</span> · 📶 <span id=ip>--</span></div></div>
+  <div>
+    <button class="btn c" onclick=wifi()>📶 GERAR CÓDIGO WI-FI</button>
+    <button class="btn m" onclick=abrirff()>📱 ABRIR FREE FIRE</button>
+    <button class="btn m" onclick=injetar()>⚡ INJETAR PROXY</button>
+    <button class="btn r" onclick="location='/logout'">🚪 SAIR</button>
+  </div>
+</header>
+
+<div class=grid id=kpis></div>
+
+<h2>🎯 PERFIS DE ATAQUE</h2>
+<div class="box" style=margin:0 14px><div class=gridbtns id=perfis></div></div>
+
+<h2>🔫 CONFIGURAR POR ARMA</h2>
+<div class="box" style=margin:0 14px><div class=armas id=armas></div></div>
+
+<div class=painel>
+  <div>
+    <h2>🌐 USUÁRIOS CONECTADOS NO MUNDO</h2>
+    <div class=mapa id=mapa></div>
+    <h2>📜 LOGS AO VIVO</h2>
+    <div class=log id=log></div>
+  </div>
+  <div>
+    <h2>⚙️ CONTROLES</h2>
+    <div class=box>
+      <button class="btn" id=btcapa onclick=toggle('capa')>🎯 CAPA: LIGADO</button>
+      <button class="btn" id=btab onclick=toggle('ab')>🛡️ ANTI-BAN: LIGADO</button>
+      <div class="t" style=margin-top:10px>⏰ TEMPO RESTANTE DAS 7H</div>
+      <div class=bar><div id=bart></div></div>
+      <div id=txtt style=font-size:12px;margin-top:4px></div>
+    </div>
+    <h2>📶 COMPARTILHAMENTO WI-FI</h2>
+    <div class=box id=wifibox>
+      <div style=opacity:.7;font-size:11px>Clique em "GERAR CÓDIGO WI-FI" no topo</div>
+    </div>
+    <h2>🖥️  MINI JANELA FF</h2>
+    <div class=box>
+      <button class="btn c" onclick="window.open('/overlay','ff','width=260,height=560')">🪟 ABRIR JANELA</button>
+      <div style=font-size:11px;opacity:.7;margin-top:6px>Essa janela fica sobre o Free Fire com todas funções</div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+<script>
+const K="{{ key }}";
+const PERFIS={{ stats.perfis|tojson }};
+const ARMAS={{ stats.armas|tojson }};
+const ws=io();let S={{ stats|tojson }},logs=[];
+
+function fmt(n){return Number(n||0).toLocaleString('pt-BR')}
+function kpis(){
+  document.getElementById('kpis').innerHTML=`
+    <div class=card><div class=t>⏱ UPTIME</div><div class="v c" id=up2>${S.uptime.texto}</div></div>
+    <div class=card><div class=t>🎯 CAPAS</div><div class="v y">${fmt(S.capa)}</div></div>
+    <div class=card><div class=t>💀 PEITO→CABEÇA</div><div class="v m">${fmt(S.peito)}</div></div>
+    <div class=card><div class=t>🚀 PACOTES UDP</div><div class=v>${fmt(S.udp.p)}</div></div>
+    <div class=card><div class=t>📦 BYTES</div><div class="v c">${Math.round((S.tcp.b+S.udp.b)/1024)} KB</div></div>
+    <div class=card><div class=t>🔗 CONEXÕES</div><div class=v>${S.tcp.c+S.udp.c}</div></div>
+    <div class=card><div class=t>🌐 SERVIDORES FF</div><div class="v m">${Object.keys(S.servidores||{}).length}</div></div>
+    <div class=card><div class=t>👥 USUÁRIOS</div><div class="v y">${S.usuarios.length}</div></div>`;
+  document.getElementById('up').textContent=S.uptime.texto;
+  document.getElementById('up2').textContent=S.uptime.texto;
+  document.getElementById('ip').textContent=S.ip_local;
+  document.getElementById('bart').style.width=S.uptime.porcento+'%';
+  document.getElementById('txtt').textContent=`Restam ${S.uptime.texto} de ${7}h`;
+}
+function render_perfis(){
+  const el=document.getElementById('perfis');el.innerHTML='';
+  for(const[id,p] of Object.entries(PERFIS)){
+    const b=document.createElement('button');b.className='btn'+(id===S.perfil_chave?' on':'');
+    b.textContent=p.nome;b.onclick=()=>fetch('/api/perfil/'+id,{headers:{'X-Key':K}}).then(()=>{S.perfil_chave=id;render_perfis()});
+    el.appendChild(b);
+  }
+}
+function render_armas(){
+  const el=document.getElementById('armas');el.innerHTML='';
+  const atual=S.por_arma||{};
+  for(const a of ARMAS){
+    const b=document.createElement('button');
+    const ligado=(atual[a]||'SO_CAPA')!=='DESLIGADO';
+    b.className='btn'+(ligado?' on':' r');
+    b.innerHTML=`<b>${a}</b><br><span style=font-size:9px>${atual[a]||'SO_CAPA'}</span>`;
+    b.onclick=()=>{
+      const p=prompt(`Perfil para ${a}?\\n${Object.keys(PERFIS).join(' / ')}`,atual[a]||'SO_CAPA');
+      if(!p)return;
+      fetch('/api/arma/'+a+'/'+p,{headers:{'X-Key':K}}).then(()=>atual[a]=p,render_armas());
+    };
+    el.appendChild(b);
+  }
+}
+function render_mapa(){
+  const m=document.getElementById('mapa');m.innerHTML='';
+  const lugares=[[30,40,'BR'],[60,30,'US'],[45,70,'EU'],[20,60,'AF'],[75,75,'AS'],[50,55,'BR'],[35,20,'BR'],[65,60,'JP']];
+  (S.usuarios||[]).slice(0,8).forEach((u,i)=>{
+    const [x,y,p]=lugares[i%lugares.length];
+    const d=document.createElement('div');d.className='ponto';
+    d.style.left=x+'%';d.style.top=y+'%';d.title=u.ip+' → '+u.servidor;
+    m.appendChild(d);
+  });
+}
+function addlog(t){
+  logs.unshift(t);if(logs.length>60)logs.pop();
+  document.getElementById('log').textContent=logs.join('\n');
+}
+function toggle(q){
+  fetch('/api/'+(q==='capa'?'capa':'antiban')+'/toggle',{headers:{'X-Key':K}}).then(r=>r.json()).then(d=>{
+    document.getElementById('bt'+q).textContent=(q==='capa'?'🎯 CAPA: ':'🛡️ ANTI-BAN: ')+(d.ativo?'LIGADO':'DESLIGADO');
+  });
+}
+function wifi(){
+  fetch('/api/wifi/novo',{headers:{'X-Key':K}}).then(r=>r.json()).then(d=>{
+    document.getElementById('wifibox').innerHTML=`
+      <div style=text-align:center>
+        <div class=qr><img src="data:image/png;base64,${d.qr_wifi.qr_b64}"></div>
+        <div style=margin-top:8px><b style=color:#ff0;font-size:22px;letter-spacing:6px>${d.dados.codigo}</b></div>
+        <div style=font-size:11px;opacity:.7>📶 ${d.qr_wifi.ssid}<br>🔑 ${d.qr_wifi.senha}<br>⏰ ${d.dados.horas}h</div>
+        <div class=qr style=margin-top:8px><img src="data:image/png;base64,${d.qr_proxy_b64}"></div>
+        <div style=font-size:10px>socks5://${d.dados.ip}:1080</div>
+        <button class="btn c" style=margin-top:8px onclick="navigator.clipboard.writeText('${d.dados.codigo}')">📋 COPIAR CÓDIGO</button>
+      </div>`;
+    addlog(`📶 NOVO CÓDIGO WI-FI: ${d.dados.codigo} · IP ${d.dados.ip}`);
+  });
+}
+function abrirff(){fetch('/api/virus/abrir_ff',{headers:{'X-Key':K}}).then(()=>addlog('🚀 ABRINDO FREE FIRE...'));}
+function injetar(){fetch('/api/virus/injetar',{headers:{'X-Key':K}}).then(r=>r.json()).then(d=>addlog('⚡ PROXY INJETADO → '+d.ip));}
+
+ws.on('stats',d=>{S=d;kpis();render_mapa();});
+ws.on('connect',()=>addlog('✅ WS CONECTADO'));
+kpis();render_perfis();render_armas();render_mapa();
+addlog('🕵️ SISTEMA PROXY OKAIDA CARREGADO');
+addlog('🔑 CHAVE: '+K.substring(0,6)+'...');
+</script></body></html>

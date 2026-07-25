@@ -1,0 +1,11 @@
+flask>=3.0
+flask-socketio>=5.3
+requests>=2.31
+psutil>=5.9
+colorama>=0.4
+pyfiglet>=1.0
+qrcode[pil]>=7.4
+python-socketio>=5.11
+eventlet>=0.36
+setuptools>=70
+wheel>=0.43

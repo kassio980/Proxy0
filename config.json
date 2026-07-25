@@ -1,0 +1,51 @@
+{
+  "PROXY": {
+    "HOST": "0.0.0.0",
+    "SOCKS": 1080,
+    "UDP": 1081,
+    "PAINEL": 8888,
+    "BUFFER": 4096,
+    "TIMEOUT": 12
+  },
+  "CAPA": {
+    "ATIVO": true,
+    "HITBOX": 4.5,
+    "PERFIL": "SO_CAPA",
+    "POR_ARMA": {
+      "MP40": "SO_CAPA",
+      "M1014": "SO_CAPA",
+      "SCAR": "SO_CAPA",
+      "AK47": "SO_CAPA",
+      "AWM": "SO_CAPA",
+      "M4A1": "SO_CAPA",
+      "MP5": "SO_CAPA",
+      "AUG": "SO_CAPA",
+      "FAMAS": "SO_CAPA",
+      "GROZA": "SO_CAPA",
+      "SG12": "SO_CAPA",
+      "XM8": "SO_CAPA",
+      "TODAS": "SO_CAPA"
+    },
+    "TODAS_ARMAS": true
+  },
+  "ANTIBAN": {
+    "ATIVO": true,
+    "PACOTES_LIMPO": true,
+    "RANDOMIZAR": true,
+    "SEED": null,
+    "LIMITADOR_PPS": true,
+    "MAX_PPS": 120
+  },
+  "TEMPO_MAX_HORAS": 7,
+  "WIFI": {
+    "COMPARTILHAR": true,
+    "CODIGO_AUTO": true
+  },
+  "EXTERNO": {
+    "TUNEL": true,
+    "DOMINIO": ""
+  },
+  "USUARIOS": {
+    "MAX": 1000
+  }
+}

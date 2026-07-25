@@ -1,0 +1,19 @@
+{
+  "chave_mestra": "okaida2026",
+  "chaves_geradas": {
+    "345866": {
+      "codigo": "345866",
+      "tipo": "WIFI",
+      "ip": "192.168.1.3",
+      "porta_socks": 1080,
+      "porta_udp": 1081,
+      "porta_painel": 8888,
+      "criado": 1784993099.311845,
+      "expira": 1785018299.3118498,
+      "nome": "PROXY OKAIDA · 192.168.1.3",
+      "horas": 7
+    }
+  },
+  "usuarios_online": {},
+  "tempo_limite_horas": 7
+}

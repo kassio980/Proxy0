@@ -1,0 +1,44 @@
+
+    <!doctype html><html><head><meta charset=utf-8>
+    <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    #ffmenu{position:fixed;top:80px;left:10px;width:220px;background:#000c;color:#0f0;border:1px solid #0f08;
+      font-family:monospace;font-size:11px;z-index:999999;border-radius:8px;backdrop-filter:blur(4px);
+      box-shadow:0 0 20px #0f05;user-select:none}
+    #ffmenu .t{padding:8px;background:#0f01;border-bottom:1px solid #0f05;font-weight:bold;letter-spacing:2px;cursor:move}
+    #ffmenu .bt{display:block;width:100%;padding:7px 10px;background:transparent;color:#0f0;border:0;border-bottom:1px solid #0f03;
+      text-align:left;font-family:monospace;font-size:11px;cursor:pointer}
+    #ffmenu .bt:hover{background:#0f02;color:#fff}
+    #ffmenu .bt.on{background:#0f03;color:#ff0}
+    #ffmenu .st{padding:6px 10px;font-size:10px;opacity:.8}
+    </style></head><body>
+    <div id=ffmenu>
+      <div class=t>🕵️ PROXY OKAIDA</div>
+      <button class="bt on" data-p=SO_CABEÇA>🎯 SÓ CABEÇA</button>
+      <button class="bt" data-p=PESCOÇO>🎯 PESCOÇO</button>
+      <button class="bt" data-p=SO_CAPA>🏆 SÓ CAPA</button>
+      <button class="bt" data-p=CABEÇA_PEITO>🎯 CABEÇA+PEITO</button>
+      <button class="bt" data-p=SÓ_PEITO>🛡️ SÓ PEITO</button>
+      <button class="bt" data-p=PÉ>🦶 SÓ PÉ</button>
+      <button class="bt" data-p=PROXY_MAX>⚡ PROXY MÁXIMO</button>
+      <div class=t style=margin-top:4px>🔫 POR ARMA</div>
+      <button class="bt" data-a=TODAS>✅ TODAS ARMAS</button>
+      <button class="bt" data-a=MP40>🔫 MP40</button>
+      <button class="bt" data-a=M1014>🔫 M1014</button>
+      <button class="bt" data-a=SCAR>🔫 SCAR</button>
+      <button class="bt" data-a=AK47>🔫 AK47</button>
+      <button class="bt" data-a=AWM>🎯 AWM</button>
+      <div class=st id=st>CAPA: 0 | CONEXÕES: 0 | PING: --</div>
+    </div>
+    <script>
+    const ws = new WebSocket((location.protocol==='https:'?'wss://':'ws://')+location.host+'/ws');
+    ws.onmessage=e=>{const d=JSON.parse(e.data);document.getElementById('st').textContent=
+      `CAPA: ${d.capa} | CONEX: ${d.udp.c+d.tcp.c} | SRV: ${Object.keys(d.srv||{}).length}`};
+    document.querySelectorAll('.bt[data-p]').forEach(b=>b.onclick=()=>{
+      document.querySelectorAll('.bt[data-p]').forEach(x=>x.classList.remove('on'));b.classList.add('on');
+      fetch('/api/perfil/'+b.dataset.p,{headers:{'X-Key':localStorage.k||''}});
+    });
+    document.querySelectorAll('.bt[data-a]').forEach(b=>b.onclick=()=>{
+      fetch('/api/arma/'+b.dataset.a+'/'+(b.classList.toggle('on')?'SO_CAPA':'DESLIGADO'),{headers:{'X-Key':localStorage.k||''}});
+    });
+    </script></body></html>

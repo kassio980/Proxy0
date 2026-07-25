@@ -1,0 +1,26 @@
+services:
+  - type: web
+    name: proxy-okaida
+    env: python
+    region: sao-paulo
+    plan: free
+    buildCommand: pip install --upgrade pip setuptools wheel && pip install --no-cache-dir -r requirements.txt
+    startCommand: python3 main.py
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.9
+      - key: PORT
+        value: "10000"
+      - key: RENDER
+        value: "1"
+      - key: CHAVE_MESTRA
+        value: okaida2026
+      - key: TEMPO_MAX_HORAS
+        value: "7"
+      - key: ANTIBAN_ATIVO
+        value: "1"
+      - key: REGIAO
+        value: BR
+      - key: MODO
+        value: PRODUCAO
+    autoDeploy: true
