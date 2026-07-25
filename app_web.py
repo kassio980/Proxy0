@@ -132,6 +132,32 @@ def api_fv(n):
     from extras_hacker import set_fullvermelho, stats_fullvermelho
     return jsonify({"ok":True, **set_fullvermelho(n), "stats":stats_fullvermelho()})
 
+@app.route("/api/linha")
+def api_linha():
+    try:
+        from proxy_core import LINHA
+        return jsonify({"ok":True, **LINHA.dados_linha()})
+    except Exception as e:
+        return jsonify({"ok":False,"erro":str(e)})
+
+@app.route("/api/hack/<nome>/<int:v>")
+def api_hack(nome,v):
+    try:
+        from proxy_core import HACKS
+        if nome in HACKS:
+            HACKS[nome]["ativo"]=bool(v)
+            try: from extras_hacker import FLAGS; FLAGS[nome]=bool(v)
+            except: pass
+        return jsonify({"ok":True,"hacks":{k:v["ativo"] for k,v in HACKS.items()}})
+    except Exception as e: return jsonify({"ok":False,"erro":str(e)})
+
+@app.route("/api/hacks")
+def api_hacks():
+    try:
+        from proxy_core import HACKS
+        return jsonify({"ok":True,"hacks":HACKS})
+    except: return jsonify({"ok":False})
+
 @app.route("/health")
 def health():
     return jsonify({"ok":True,"modo":"RENDER" if os.environ.get("RENDER") else "TERMUX","proxy_okaida":"v2.2","hora":time.strftime("%Y-%m-%d %H:%M:%S")})
