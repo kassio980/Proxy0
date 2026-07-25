@@ -83,7 +83,6 @@ tr:hover td{background:#111a45}
     <div class=menu-item data-aba=usuarios>👥 Usuários</div>
     <div class=menu-item data-aba=logs>📜 Logs Ao Vivo</div>
     <div class="menu-item" data-aba="wifi">📶 WI-FI · DEPURAÇÃO</div>
-    <div class=menu-item data-aba=wifi>📶 WI-FI · DEPURAÇÃO</div>
     <div class=menu-item data-aba=config>⚙️ Config</div>
     <div style=position:absolute;bottom:16px;left:18px;right:18px>
       <div class=card style=padding:12px;margin:0>
@@ -143,7 +142,6 @@ tr:hover td{background:#111a45}
       <section id=wifi class=aba><h2 style=margin:0 0 14px>📶 Wi-Fi & Compartilhamento</h2><div class="grid-2"><div class=card><div style=font-weight:700;margin-bottom:10px>Gerar Código 6 Dígitos</div><div style=font-size:12.5px;color:var(--muted);margin-bottom:14px>Válido 7h · Qualquer um conecta digitando ou escaneando o QR</div><button class="btn btn-primary" onclick=gerarWifi()>📶 GERAR NOVO CÓDIGO</button></div><div class=card id=wifi-res><div style=opacity:.6>Clique no botão para gerar</div></div></div></section>
       
       <section id=wifi class=aba>
-        <h2 style="margin:0 0 14px;font-size:22px">📶 WI-FI · DEPURAÇÃO · COMPARTILHAMENTO</h2>
         <div class="grid-2" style="margin-bottom:16px">
           <div class=card>
             <div style="font-weight:700;margin-bottom:10px">🔗 Conectar por Wi-Fi (Depuração Wireless)</div>
@@ -193,6 +191,55 @@ tr:hover td{background:#111a45}
           <table><thead><tr><th>🔢 Código</th><th>🕐 Criado</th><th>⏳ Expira</th><th>🔁 Usos</th><th style="text-align:right">Status</th></tr></thead><tbody id=wifi-lista><tr><td colspan=5 style="text-align:center;padding:20px;color:var(--muted)">Nenhum código gerado ainda</td></tr></tbody></table>
         </div>
       </section>
+
+<section id="wifi" class="aba">
+  <div class="topo-aba">
+    <h2>📶 WI-FI · DEPURAÇÃO · COMPARTILHAMENTO</h2>
+    <span class="tag tag-info">Acesso Mestre</span>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <h3>🔗 DEPURAÇÃO POR WI-FI</h3>
+      <p style="color:var(--muted);font-size:12px;margin:8px 0 14px">1. Ative Opções de Desenvolvedor e Depuração por Wi-Fi no celular<br>2. Ambos na MESMA rede<br>3. Digite IP e porta → Conectar</p>
+      <div style="display:flex;gap:8px;margin-bottom:10px">
+        <input id="ipadb" placeholder="IP do celular ex: 192.168.0.12" style="flex:1;padding:10px;background:#070a20;border:1px solid var(--borda);border-radius:8px;color:#fff">
+        <input id="portaadb" value="5555" style="width:90px;padding:10px;background:#070a20;border:1px solid var(--borda);border-radius:8px;color:#fff;text-align:center">
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn btn-primary" onclick="conectarADB()">🔗 CONECTAR</button>
+        <button class="btn btn-verde" onclick="abrirFF()">🎮 ABRIR FF</button>
+        <button class="btn btn-verm" onclick="desativarProxy()">🛑 PARAR PROXY</button>
+      </div>
+      <div id="logadb" style="margin-top:10px;font-family:monospace;font-size:11px;color:var(--muted);min-height:24px"></div>
+    </div>
+
+    <div class="card">
+      <h3>⚙️ DADOS DE CONEXÃO</h3>
+      <table style="width:100%;margin-top:8px">
+        <tr><td style="padding:6px 0;color:var(--muted)">SOCKS5</td><td>127.0.0.1:1080</td></tr>
+        <tr><td style="padding:6px 0;color:var(--muted)">UDP</td><td>127.0.0.1:1081</td></tr>
+        <tr><td style="padding:6px 0;color:var(--muted)">Painel</td><td>Render:8888</td></tr>
+        <tr><td style="padding:6px 0;color:var(--muted)">Validade</td><td>7 HORAS</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:16px">
+    <h3>🎟️ GERAR CÓDIGO DE COMPARTILHAMENTO 6 DÍGITOS</h3>
+    <p style="color:var(--muted);font-size:12px;margin:6px 0 14px">Quem digitar o código conecta automaticamente no seu proxy</p>
+    <button class="btn btn-primary" onclick="gerarCodigo()">📶 GERAR NOVO CÓDIGO</button>
+    <div id="resultadocod" style="margin-top:16px"></div>
+  </div>
+
+  <div class="card" style="margin-top:16px">
+    <h3>📜 CÓDIGOS GERADOS</h3>
+    <table style="width:100%;margin-top:8px">
+      <thead><tr style="border-bottom:1px solid var(--borda)"><th>Código</th><th>Criado</th><th>Expira</th><th>Status</th></tr></thead>
+      <tbody id="listacod"><tr><td colspan="4" style="text-align:center;padding:20px;color:var(--muted)">Nenhum código ainda</td></tr></tbody>
+    </table>
+  </div>
+</section>
 
       <section id=config class=aba><h2 style=margin:0 0 14px>⚙️ Configurações</h2><div class=grid-3>
         <div class=card><b>🔐 Chave Mestra</b><div style=font-family:monospace;color:var(--roxo2);margin-top:6px>okaida2026</div></div>
