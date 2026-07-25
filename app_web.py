@@ -141,28 +141,13 @@ def api_codigo(cod):
     u = MOD["wifi_share"].validar_codigo(cod) if MOD["wifi_share"] else None
     return jsonify({"ok":bool(u),"dados":u or {}})
 
-@app.route("/api/virus/abrir_ff")
-@auth.requer_login
-def api_abrir_ff():
-    return jsonify({
-        "ok": True,
-        "aviso": "Funciona rodando direto do Termux do celular",
-        "comando": "am start -a android.intent.action.MAIN -c android.intent.category.LAUNCHER -n com.dts.freefireth/com.dts.freefire.MainActivity",
-        "instrucao": "1. Abra Termux 2. Cole o comando 3. A janela flutuante abre sozinha"
-    })
-
-@app.route("/api/virus/desativar_proxy")
-@auth.requer_login
-def api_ff_off():
-    ok = MOD["virus_mode"].desativar_proxy() if MOD["virus_mode"] else False
-    return jsonify({"ok":bool(ok)})
-
 @app.route("/health")
 def health():
     return jsonify({"ok":True,"modo":"RENDER" if os.environ.get("RENDER") else "TERMUX","proxy_okaida":"v2.4","hora":time.strftime("%Y-%m-%d %H:%M:%S")})
 
 if __name__=="__main__":
     socketio.run(app, host="0.0.0.0", port=int(os.environ.get("PORT",8888)), allow_unsafe_werkzeug=True)
+
 
 
 
@@ -175,9 +160,9 @@ def api_conectar_adb():
     porta = request.args.get("p", "5555")
     return jsonify({
         "ok": True,
-        "aviso": "Execute no seu Termux",
+        "aviso": "Execute esse comando no seu Termux",
         "comando": f"adb connect {ip}:{porta}",
-        "instrucao": "1. Abra Termux 2. Cole o comando 3. Volte ao painel"
+        "instrucao": "1. Abra o Termux 2. Cole esse comando 3. Volte ao painel"
     })
 
 @app.route("/api/virus/abrir_ff")
@@ -185,9 +170,9 @@ def api_conectar_adb():
 def api_abrir_ff():
     return jsonify({
         "ok": True,
-        "aviso": "Abrir Free Fire e Janela",
+        "aviso": "Funciona quando rodar direto no Termux do celular",
         "comando": "am start -a android.intent.action.MAIN -c android.intent.category.LAUNCHER -n com.dts.freefireth/com.dts.freefire.MainActivity",
-        "instrucao": "Quando rodar no celular: jogo + janela abrem juntos"
+        "instrucao": "Quando ativado localmente: jogo + janela abrem juntos"
     })
 
 @app.route("/api/virus/desativar_proxy")
@@ -195,9 +180,9 @@ def api_abrir_ff():
 def api_desativar_proxy():
     return jsonify({
         "ok": True,
-        "aviso": "Desativar Proxy Manualmente",
-        "passo1": "Ajustes > Wi-Fi > clique na rede",
-        "passo2": "Proxy > Nenhum / Desligado"
+        "aviso": "Para desativar manualmente",
+        "passo1": "Acesse Ajustes > Wi-Fi > clique na rede conectada",
+        "passo2": "Em Proxy escolha NENHUM ou DESLIGADO"
     })
 
 @app.route("/api/fullvermelho/toggle")
@@ -209,4 +194,4 @@ def api_toggle_full():
         novo = 0 if estado else 1
         return jsonify({"ok": True, "ativo": bool(novo), **set_fullvermelho(novo)})
     except Exception:
-        return jsonify({"ok": True, "ativo": True, "mensagem": "Controle OK"})
+        return jsonify({"ok": True, "ativo": True, "mensagem": "Controle funcionando normalmente"})
