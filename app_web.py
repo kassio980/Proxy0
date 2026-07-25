@@ -171,15 +171,6 @@ def api_conectar_adb():
         "passo3": f"adb connect {ip}:{porta}"
     })
 
-@app.route("/api/virus/abrir_ff")
-@auth.requer_login
-def api_abrir_ff():
-    return jsonify({
-        "ok": True,
-        "comando": "adb shell am start -a android.intent.action.MAIN -c android.intent.category.LAUNCHER -n com.dts.freefireth/com.dts.freefire.MainActivity",
-        "aviso": "Funciona só depois de conectado com sucesso"
-    })
-
 @app.route("/api/virus/desativar_proxy")
 @auth.requer_login
 def api_desativar_proxy():
@@ -198,3 +189,14 @@ def api_toggle_full():
         return jsonify({"ok": True, "ativo": bool(novo), **set_fullvermelho(novo)})
     except Exception:
         return jsonify({"ok": True, "ativo": True, "mensagem": "Controle OK"})
+
+@app.route("/api/virus/abrir_ff")
+@auth.requer_login
+def api_abrir_ff():
+    return jsonify({
+        "ok": True,
+        "aviso": "✅ COPIA ESSE AQUI — JA FUNCIONOU NO SEU",
+        "abrir_jogo": "adb shell monkey -p com.dts.freefireth -c android.intent.category.LAUNCHER 1",
+        "abrir_janela_depois": "sleep 3 && am start -a android.intent.action.MAIN -c android.intent.category.LAUNCHER -n SEU_APP_DA_JANELA",
+        "instrucao": "Primeiro abre o jogo, depois abre a janela manualmente ou com o segundo comando"
+    })
