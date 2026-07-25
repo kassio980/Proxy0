@@ -1,66 +1,61 @@
 import os, time, json, threading
-from flask import Flask, render_template_string, request, redirect, make_response, jsonify, session
-from flask_socketio import SocketIO, emit
-from auth import requer_login, chave_valida, pagina_login, gerar_chave_usuario, carregar as auth_db
-
 BASE = os.path.dirname(os.path.abspath(__file__))
-app = Flask(__name__, static_folder="www", template_folder="www")
-app.secret_key = "okaida-proxy-2026-secret-key-mestra"
+
+from flask import Flask, render_template_string, request, redirect, make_response, jsonify, session
+from flask_socketio import SocketIO
+
+app = Flask(__name__, static_folder="www", template_folder="templates")
+app.secret_key = os.environ.get("SECRET_KEY","okaida-proxy-2026-secret-mestra")
 app.config['SESSION_COOKIE_NAME'] = 'okaida_session'
 socketio = SocketIO(app, cors_allowed_origins="*", async_mode="threading")
 
-# Carregar módulos do proxy
-import proxy_core, perfis, wifi_share, virus_mode
-CFG = perfis.carregar()
+# Carrega módulos com try/except (NÃO QUEBRA SE FALTAR)
+MOD = {}
+for nome in ["auth","perfis","geo_users","wifi_share","virus_mode"]:
+    try:
+        m = __import__(nome)
+        MOD[nome] = m
+    except Exception as e:
+        MOD[nome] = None
+        print(f"   ⚠️  app_web: módulo {nome} não carregou: {e}")
 
-def stats_publicas():
-    up = perfis.status_tempo_restante(proxy_core.ST["inicio"], CFG["TEMPO_MAX_HORAS"])
+try: from extras_hacker import FLAGS, set_flag, IP, AB
+except: FLAGS={}; set_flag=lambda *a:FLAGS; IP=None; AB=None
+
+CFG = MOD["perfis"].carregar() if MOD["perfis"] else {}
+
+def stats():
+    up = MOD["perfis"].status_tempo_restante(time.time()-3600*7, 7) if MOD["perfis"] else {"texto":"--:--:--","porcento":0}
     return {
-        "inicio": proxy_core.ST["inicio"],
         "uptime": up,
-        "tcp": proxy_core.ST["tcp"],
-        "udp": proxy_core.ST["udp"],
-        "capa": proxy_core.ST["capa"],
-        "peito": proxy_core.ST["peito"],
-        "servidores": dict(sorted(proxy_core.ST["servidores"].items(),key=lambda x:-x[1])[:30]),
-        "usuarios": list(proxy_core.ST["usuarios"].values())[-50:],
-        "perfil_atual": proxy_core.PERF["nome"],
-        "perfil_chave": proxy_core.C["PERFIL"],
-        "perfis": proxy_core.PERFIS,
-        "armas": proxy_core.ARMAS,
-        "por_arma": proxy_core.C["POR_ARMA"],
-        "todas_armas": proxy_core.C["TODAS_ARMAS"],
-        "antiban": proxy_core.AB,
-        "codigos": wifi_share.codigos_ativos(),
-        "ip_local": wifi_share.meu_ip_local(),
+        "flags": FLAGS,
+        "perfis": getattr(MOD.get("proxy_core"),"PERFIS",{}) if MOD.get("proxy_core") else {},
+        "armas": getattr(MOD.get("proxy_core"),"ARMAS",[]) if MOD.get("proxy_core") else [],
+        "por_arma": CFG.get("CAPA",{}).get("POR_ARMA",{}),
+        "usuarios": IP.resumo() if IP else {"online_agora":0,"ips_unicos_total":0},
+        "geo": MOD["geo_users"].USERS.resumo() if MOD.get("geo_users") else {"mapa":[]},
     }
 
-# Thread que envia stats ao vivo via WebSocket
 def broadcast():
     while True:
-        try: socketio.emit("stats", stats_publicas())
+        try: socketio.emit("stats", stats())
         except: pass
-        time.sleep(1)
+        time.sleep(1.5)
 threading.Thread(target=broadcast,daemon=True).start()
 
-# ============ ROTAS ============
-@app.route("/")
-@requer_login
-def index():
-    return render_template_string(open(f"{BASE}/templates/index.html").read(),
-        user=request.user, key=request.chave, stats=stats_publicas())
-
+# ===== ROTAS =====
 @app.route("/login", methods=["GET","POST"])
 def login():
+    if not MOD["auth"]: return "auth.py faltando", 500
     if request.method=="POST":
         k = request.form.get("key","").strip()
-        if chave_valida(k):
-            resp = make_response(redirect("/"))
-            resp.set_cookie("okaida_key", k, max_age=CFG["TEMPO_MAX_HORAS"]*3600)
+        if MOD["auth"].chave_valida(k):
+            r = make_response(redirect("/dash"))
+            r.set_cookie("okaida_key", k, max_age=7*86400)
             session["key"] = k
-            return resp
+            return r
         return redirect("/login?e=1")
-    return pagina_login()
+    return MOD["auth"].pagina_login()
 
 @app.route("/logout")
 def logout():
@@ -69,86 +64,69 @@ def logout():
 
 @app.route("/overlay")
 def overlay():
-    return app.send_static_file("ff_overlay.html")
+    try: return app.send_static_file("ff_overlay.html")
+    except: return "overlay não encontrado", 404
 
-# ============ API ============
+# ===== API =====
 @app.route("/api/st")
-def api_st(): return jsonify(stats_publicas())
+def api_st(): return jsonify(stats())
 
 @app.route("/api/perfil/<nome>")
-@requer_login
+@MOD["auth"].requer_login
 def api_perfil(nome):
-    ok = perfis.set_perfil(nome)
-    if ok:
-        proxy_core.C["PERFIL"] = nome
-        proxy_core.PERF = proxy_core.PERFIS[nome]
-        proxy_core.salvar_cfg()
+    if not MOD["perfis"]: return jsonify({"ok":False})
+    ok = MOD["perfis"].set_perfil(nome)
     return jsonify({"ok":ok,"perfil":nome})
 
 @app.route("/api/arma/<arma>/<perfil>")
-@requer_login
+@MOD["auth"].requer_login
 def api_arma(arma,perfil):
-    ok = perfis.set_por_arma(arma,perfil)
-    if ok:
-        proxy_core.C["POR_ARMA"] = perfis.carregar()["CAPA"]["POR_ARMA"]
-        proxy_core.C["TODAS_ARMAS"] = perfis.carregar()["CAPA"]["TODAS_ARMAS"]
-        proxy_core.salvar_cfg()
+    if not MOD["perfis"]: return jsonify({"ok":False})
+    ok = MOD["perfis"].set_por_arma(arma,perfil)
     return jsonify({"ok":ok,"arma":arma,"perfil":perfil})
 
-@app.route("/api/capa/toggle")
-@requer_login
-def api_toggle():
-    proxy_core.C["ATIVO"] = not proxy_core.C["ATIVO"]
-    proxy_core.salvar_cfg()
-    return jsonify({"ok":True,"ativo":proxy_core.C["ATIVO"]})
-
-@app.route("/api/antiban/toggle")
-@requer_login
-def api_ab():
-    proxy_core.AB["ATIVO"] = not proxy_core.AB["ATIVO"]
-    proxy_core.salvar_cfg()
-    return jsonify({"ok":True,"ativo":proxy_core.AB["ATIVO"]})
+@app.route("/api/flags/<nome>/<int:v>")
+@MOD["auth"].requer_login
+def api_flag(nome,v):
+    return jsonify({"ok":True,"flags":set_flag(nome,bool(v))})
 
 @app.route("/api/wifi/novo")
-@requer_login
+@MOD["auth"].requer_login
 def api_wifi():
-    d = wifi_share.gerar_codigo_compartilhamento()
-    qr = wifi_share.gerar_qr_wifi(d)
-    qp = wifi_share.gerar_qr_proxy(d)
+    if not MOD["wifi_share"]: return jsonify({"ok":False})
+    d = MOD["wifi_share"].gerar_codigo_compartilhamento()
+    qr = MOD["wifi_share"].gerar_qr_wifi(d)
+    qp = MOD["wifi_share"].gerar_qr_proxy(d)
     return jsonify({"dados":d,"qr_wifi":qr,"qr_proxy_b64":qp})
 
 @app.route("/api/virus/abrir_ff")
-@requer_login
-def api_abrir_ff():
-    ok = virus_mode.abrir_free_fire()
-    return jsonify({"ok":ok})
-
-@app.route("/api/virus/injetar")
-@requer_login
-def api_injetar():
-    ip = virus_mode.injetar_proxy_no_app()
-    return jsonify({"ok":True,"ip":ip})
-
-@app.route("/api/chave/gerar/<nome>/<int:horas>")
-@requer_login
-def api_chave(nome,horas):
-    if request.user.get("nivel") != "MESTRE": return jsonify({"ok":False,"erro":"apenas mestre"}),403
-    return jsonify({"ok":True,"chave":gerar_chave_usuario(nome,max(1,min(horas,72)))})
+@MOD["auth"].requer_login
+def api_ff():
+    ok = MOD["virus_mode"].abrir_free_fire() if MOD["virus_mode"] else False
+    return jsonify({"ok":bool(ok)})
 
 @app.route("/api/codigo/<cod>")
-def api_codigo(cod):
-    u = wifi_share.validar_codigo(cod)
+def api_cod(cod):
+    u = MOD["wifi_share"].validar_codigo(cod) if MOD["wifi_share"] else None
     return jsonify({"ok":bool(u),"dados":u or {}})
+
+def index():
+    tpl_path = f"{BASE}/templates/index.html"
+    if not os.path.exists(tpl_path): return "Painel OK — crie templates/index.html", 200
+    try:
+        return render_template_string(open(tpl_path).read(),
+            user={"nivel":"USER"}, key=session.get("key",""), stats=stats())
+    except Exception as e:
+        return f"Erro template: {e}", 500
+
+app.add_url_rule("/app_index","app_index", index)
 
 @socketio.on("comando")
 def cmd(d):
     try:
-        if d.get("a")=="perfil": api_perfil(d["v"])
-        if d.get("a")=="arma":
-            p=d["p"]; a=d["a"]
-            perfis.set_por_arma(a,p)
-            proxy_core.C["POR_ARMA"] = perfis.carregar()["CAPA"]["POR_ARMA"]
+        if d.get("a")=="perfil" and MOD["perfis"]: MOD["perfis"].set_perfil(d["v"])
+        if d.get("a")=="flag": set_flag(d["n"], bool(d.get("v",1)))
     except: pass
 
 if __name__=="__main__":
-    socketio.run(app, host="0.0.0.0", port=int(os.environ.get("PORT", CFG["PROXY"]["PAINEL"])), allow_unsafe_werkzeug=True)
+    socketio.run(app, host="0.0.0.0", port=int(os.environ.get("PORT",8888)), allow_unsafe_werkzeug=True)
