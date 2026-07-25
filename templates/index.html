@@ -1,427 +1,189 @@
 <!doctype html><html lang=pt-BR><head><meta charset=utf-8>
 <meta name=viewport content="width=device-width,initial-scale=1">
-<title>🕵️ PROXY OKAIDA — PAINEL</title>
-<script src="https://cdn.tailwindcss.com"></script>
-<script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
-<script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+<title>PROXY OKAIDA · PAINEL</title>
 <style>
 :root{
   --bg:#050816;--bg2:#070b1f;--card:#0d1338;--card2:#111a45;
   --borda:#1e1b4b;--borda2:#312e81;
   --roxo:#7c3aed;--roxo2:#a78bfa;--azul:#38bdf8;--azul2:#0ea5e9;
-  --verde:#22c55e;--vermelho:#ef4444;--amarelo:#f59e0b;
+  --verde:#22c55e;--vermelho:#ef4444;
   --texto:#e2e8f0;--muted:#94a3b8;
 }
-*{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--texto);font-family:Inter,system-ui,sans-serif;font-size:14px}
-::-webkit-scrollbar{width:8px;height:8px}::-webkit-scrollbar-thumb{background:#312e81;border-radius:8px}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--texto)}
+.topo{padding:20px 24px;background:var(--bg2);border-bottom:1px solid var(--borda);display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:999}
+.nome h1{font-size:22px;font-weight:800}
+.nome p{font-size:13px;color:var(--muted)}
+.status-topo{display:flex;gap:12px;align-items:center}
+.tag{padding:8px 14px;border-radius:20px;font-size:13px;font-weight:600}
+.tag-info{background:rgba(56,189,248,.12);color:#7dd3fc;border:1px solid rgba(56,189,248,.3)}
+.tag-mestra{background:rgba(124,58,237,.18);color:#c4b5fd;border:1px solid rgba(167,139,250,.4)}
+.tag-sair{background:rgba(239,68,68,.18);color:#fca5a5;border:1px solid rgba(239,68,68,.4);cursor:pointer}
 
-.app{display:grid;grid-template-columns:260px 1fr;min-height:100vh}
-.sidebar{background:linear-gradient(180deg,#0a0f2e,#070a1f);border-right:1px solid var(--borda);padding:20px 0;position:sticky;top:0;height:100vh}
-.logo-side{padding:0 18px 20px;border-bottom:1px solid var(--borda);display:flex;align-items:center;gap:10px;margin-bottom:10px}
-.hex{width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,var(--roxo),#4338ca);display:flex;align-items:center;justify-content:center;flex-shrink:0}
-.menu-item{display:flex;align-items:center;gap:10px;padding:11px 18px;color:var(--muted);cursor:pointer;transition:.15s;border-left:3px solid transparent;font-size:13.5px}
-.menu-item:hover{background:#111a45;color:#fff}
-.menu-item.ativo{background:linear-gradient(90deg,rgba(124,58,237,.18),transparent);color:#fff;border-left-color:var(--roxo)}
-.topbar{background:#0a0f2ecc;backdrop-filter:blur(10px);border-bottom:1px solid var(--borda);padding:14px 28px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50}
-.conteudo{padding:24px 28px 60px}
+.container{display:flex;min-height:calc(100vh - 90px)}
+.menu{width:260px;background:var(--bg2);border-right:1px solid var(--borda);padding:16px 0;position:fixed;top:90px;bottom:0;overflow-y:auto}
+.item-menu{padding:12px 20px;margin:2px 12px;border-radius:10px;cursor:pointer;font-size:14px;font-weight:500;transition:.2s}
+.item-menu:hover,.item-menu.ativo{background:var(--card);color:var(--roxo2)}
 
-.card{background:linear-gradient(180deg,var(--card),var(--card2));border:1px solid var(--borda);border-radius:14px;padding:18px;box-shadow:0 4px 20px rgba(0,0,0,.3)}
-.card-tit{font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
-.card-val{font-size:28px;font-weight:800;background:linear-gradient(90deg,#fff,#c4b5fd);-webkit-background-clip:text;background-clip:text;color:transparent;line-height:1.1}
-.card-sub{font-size:12px;color:var(--muted);margin-top:4px}
-.tag{display:inline-block;padding:3px 9px;border-radius:999px;font-size:11px;font-weight:600}
-.tag-ligado{background:rgba(34,197,94,.15);color:#4ade80;border:1px solid rgba(34,197,94,.3)}
-.tag-desl{background:rgba(239,68,68,.12);color:#f87171;border:1px solid rgba(239,68,68,.25)}
-.tag-info{background:rgba(56,189,248,.12);color:#7dd3fc;border:1px solid rgba(56,189,248,.25)}
-
-table{width:100%;border-collapse:collapse;font-size:13px}
-th{text-align:left;padding:10px 12px;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--borda)}
-td{padding:11px 12px;border-bottom:1px solid #1a1f4a}
-tr:hover td{background:#111a45}
-
-.toggle{position:relative;width:40px;height:22px;background:#1e1b4b;border-radius:999px;cursor:pointer;transition:.2s;flex-shrink:0}
-.toggle::after{content:"";position:absolute;width:16px;height:16px;background:#64748b;border-radius:50%;top:3px;left:3px;transition:.2s}
-.toggle.on{background:linear-gradient(135deg,var(--roxo),var(--azul))}
-.toggle.on::after{left:21px;background:#fff}
-
-.btn{padding:9px 14px;border-radius:9px;font-size:12.5px;font-weight:600;cursor:pointer;border:0;transition:.15s;display:inline-flex;align-items:center;gap:6px}
-.btn-primary{background:linear-gradient(135deg,var(--roxo),#4f46e5);color:#fff}
-.btn-primary:hover{transform:translateY(-1px);box-shadow:0 8px 20px rgba(124,58,237,.4)}
-.btn-sec{background:#111a45;color:#fff;border:1px solid var(--borda2)}
-.btn-verde{background:rgba(34,197,94,.15);color:#4ade80;border:1px solid rgba(34,197,94,.3)}
-.btn-verm{background:rgba(239,68,68,.12);color:#f87171;border:1px solid rgba(239,68,68,.25)}
-
-.aba{display:none}.aba.ativa{display:block}
-.tabs{display:flex;gap:4px;border-bottom:1px solid var(--borda);margin-bottom:18px;flex-wrap:wrap}
-.tab{padding:10px 16px;color:var(--muted);cursor:pointer;font-size:13px;border-bottom:2px solid transparent}
-.tab:hover{color:#fff}.tab.ativo{color:#fff;border-bottom-color:var(--roxo)}
-
-.logs{background:#050816;border:1px solid var(--borda);border-radius:10px;padding:12px 14px;height:360px;overflow:auto;font-family:Consolas,monospace;font-size:12px;line-height:1.55}
-.logs .l{margin:1px 0}.logs .t{color:#64748b;margin-right:8px}
-.logs .ok{color:#4ade80}.logs .er{color:#f87171}.logs .info{color:#7dd3fc}.logs .av{color:#fbbf24}
-
-.grid-kpi{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px}
-.grid-2{display:grid;grid-template-columns:2fr 1fr;gap:16px}
-.grid-3{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px}
-@media(max-width:1000px){.app{grid-template-columns:1fr}.sidebar{display:none}.grid-2{grid-template-columns:1fr}}
-
-.blink{animation:b 1s steps(2) infinite}@keyframes b{50%{opacity:.3}}
-.graf{height:300px;width:100%}
+.conteudo{flex:1;margin-left:260px;padding:24px}
+.aba{display:none}
+.aba.visivel{display:block}
+.grid-2{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:16px;margin-bottom:16px}
+.card{background:var(--card);border:1px solid var(--borda);border-radius:14px;padding:20px}
+.valor{font-size:36px;font-weight:800;margin:8px 0}
+.btn{padding:10px 16px;border-radius:10px;border:0;font-weight:600;cursor:pointer}
+.btn-principal{background:linear-gradient(135deg,var(--roxo),var(--azul2));color:#fff}
+.btn-verde{background:rgba(34,197,94,.18);color:#86efac;border:1px solid rgba(34,197,94,.4)}
+.btn-verm{background:rgba(239,68,68,.18);color:#fca5a5;border:1px solid rgba(239,68,68,.4)}
+input{width:100%;padding:10px 12px;background:rgba(7,10,32,.85);border:1px solid var(--borda2);border-radius:8px;color:#fff;outline:none;margin:4px 0}
+table{width:100%;border-collapse:collapse;margin-top:8px}
+td,th{padding:8px 4px;text-align:left;border-bottom:1px solid var(--borda)}
 </style></head><body>
 
-<div class=app>
-  <aside class=sidebar>
-    <div class=logo-side>
-      <div class=hex><svg width=18 height=18 viewBox="0 0 24 24" fill=none stroke=#fff stroke-width=2.2><path d="M12 2L3 7v10l9 5 9-5V7z"/><path d="M3 7l9 5 9-5"/></svg></div>
-      <div><div style=font-weight:800>PROXY OKAIDA</div><div style=font-size:10.5px;color:var(--muted);letter-spacing:1.5px>PAINEL v2.2</div></div>
-    </div>
-    <div class="menu-item ativo" data-aba=dash>📊 Dashboard</div>
-    <div class=menu-item data-aba=controles>🎛️ Controles</div>
-    <div class=menu-item data-aba=perfis>🎯 Perfis</div>
-    <div class=menu-item data-aba=armas>🔫 Por Arma</div>
-    <div class=menu-item data-aba=usuarios>👥 Usuários</div>
-    <div class=menu-item data-aba=logs>📜 Logs Ao Vivo</div>
-    <div class="menu-item" data-aba="wifi">📶 WI-FI · DEPURAÇÃO</div>
-    <div class=menu-item data-aba=config>⚙️ Config</div>
-    <div style=position:absolute;bottom:16px;left:18px;right:18px>
-      <div class=card style=padding:12px;margin:0>
-        <div style=font-size:10.5px;color:var(--muted);letter-spacing:1.5px>STATUS</div>
-        <div style=display:flex;align-items:center;gap:8px;margin-top:6px>
-          <span class="tag tag-ligado blink">● AO VIVO</span>
-          <span id=up style=font-size:12px;color:var(--muted)>--:--:--</span>
-        </div>
-      </div>
-    </div>
-  </aside>
+<!-- TOPO -->
+<div class=topo>
+  <div class=nome>
+    <h1>Olá, Okaida Oficial</h1>
+    <p>Sistema Exclusivo — OKAIDA OFICIAL · Todos os módulos carregados</p>
+  </div>
+  <div class=status-topo>
+    <span class="tag tag-mestra">🔐 ACESSO MESTRE</span>
+    <span class="tag tag-sair" onclick="location.href='/logout'">🚪 Sair</span>
+  </div>
+</div>
 
-  <main>
-    <div class=topbar>
-      <div><div style=font-size:18px;font-weight:800>Olá, <span style=color:var(--roxo2)>Mestre Okaida</span></div><div style=font-size:12px;color:var(--muted)>Sistema Exclusivo · Todos módulos carregados</div></div>
-      <div style=display:flex;gap:10px;align-items:center>
-        <span class="tag tag-info">🔑 ACESSO MESTRE</span>
-        <button class="btn btn-verm" onclick="location='/logout'">🚪 Sair</button>
-      </div>
-    </div>
-
-    <div class=conteudo>
-      <section id=dash class="aba ativa">
-        <div class=grid-kpi>
-          <div class=card><div class=card-t>⏱️ Uptime (7h)</div><div id=k-up class=card-val>00:00:00</div><div class=card-sub id=k-up2>0% utilizado</div></div>
-          <div class=card><div class=card-t>🎯 Capas Hoje</div><div id=k-capa class=card-val>0</div></div>
-          <div class=card><div class=card-t>💀 Peito → Cabeça</div><div id=k-peito class=card-val>0</div></div>
-          <div class=card><div class=card-t>📦 Pacotes UDP</div><div id=k-pkt class=card-val>0</div></div>
-          <div class=card><div class=card-t>🔗 Conexões</div><div id=k-con class=card-val>0</div></div>
-          <div class=card><div class=card-t>👥 Online Agora</div><div id=k-on class=card-val>0</div><div class=card-sub id=k-pais>0 países</div></div>
-          <div class=card><div class=card-t>🌐 IPs Únicos</div><div id=k-ips class=card-val>0</div></div>
-          <div class=card><div class=card-t>🛡️ Anti-Ban</div><div class=card-val style=color:#4ade80;-webkit-text-fill-color:#4ade80>20 CAMADAS</div><div class=card-sub><span class="tag tag-ligado">ATIVO</span></div></div>
-        </div>
-        <div class="grid-2" style=margin-top:18px>
-          <div class=card><div style=display:flex;justify-content:space-between;margin-bottom:12px><b>📈 Atividade Ao Vivo</b><span class="tag tag-info">60s</span></div><div id=graf class=graf></div></div>
-          <div class=card><div style=font-weight:700;margin-bottom:12px>🌍 Por País</div><div id=pais class=graf></div></div>
-        </div>
-        <div class="grid-2" style=margin-top:16px>
-          <div class=card><div style=font-weight:700;margin-bottom:12px>⚡ Funções</div><div id=funcoes style=display:grid;gap:8px></div></div>
-          <div class=card>
-            <div style=font-weight:700;margin-bottom:12px>🎯 Perfil Atual</div>
-            <div id=perfil-atual style=font-size:22px;font-weight:800;color:var(--roxo2)>--</div>
-            <div style=margin-top:14px>
-              <div style=font-size:11px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:6px>⏰ Tempo 7h</div>
-              <div style=height:10px;background:#0a0f2e;border-radius:999px;overflow:hidden;border:1px solid var(--borda)><div id=bar style=height:100%;width:0%;background:linear-gradient(90deg,var(--azul),var(--roxo))></div></div>
-              <div id=resta style=font-size:12px;color:var(--muted);margin-top:6px>--:--:--</div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section id=controles class=aba><h2 style=margin:0 0 14px>🎛️ Controles Gerais</h2><div class=grid-3 id=lista-controles></div></section>
-      <section id=perfis class=aba><h2 style=margin:0 0 14px>🎯 Perfis de Ataque</h2><div class=grid-3 id=lista-perfis></div></section>
-      <section id=armas class=aba><h2 style=margin:0 0 14px>🔫 Por Arma</h2><div class=card><table><thead><tr><th>Arma</th><th>Perfil</th><th style=text-align:right>Ação</th></tr></thead><tbody id=tabela-armas></tbody></table></div></section>
-      <section id=usuarios class=aba><h2 style=margin:0 0 14px>👥 Usuários no Mundo</h2><div class=card><table><thead><tr><th>📍</th><th>🌐 IP</th><th>🎮 Servidor</th><th>📥 Última</th><th>🎯 Tiros</th><th>💀 Capas</th></tr></thead><tbody id=tabela-users></tbody></table></div></section>
-      <section id=logs class=aba><div style=display:flex;justify-content:space-between;margin-bottom:14px><h2 style=margin:0>📜 Logs Ao Vivo</h2><button class="btn btn-sec" onclick=document.getElementById('logbox').innerHTML=''>🗑️ Limpar</button></div><div id=logbox class=logs></div></section>
-      <section id=wifi class=aba><h2 style=margin:0 0 14px>📶 Wi-Fi & Compartilhamento</h2><div class="grid-2"><div class=card><div style=font-weight:700;margin-bottom:10px>Gerar Código 6 Dígitos</div><div style=font-size:12.5px;color:var(--muted);margin-bottom:14px>Válido 7h · Qualquer um conecta digitando ou escaneando o QR</div><button class="btn btn-primary" onclick=gerarWifi()>📶 GERAR NOVO CÓDIGO</button></div><div class=card id=wifi-res><div style=opacity:.6>Clique no botão para gerar</div></div></div></section>
-      
-      <section id=wifi class=aba>
-        <div class="grid-2" style="margin-bottom:16px">
-          <div class=card>
-            <div style="font-weight:700;margin-bottom:10px">🔗 Conectar por Wi-Fi (Depuração Wireless)</div>
-            <div style="font-size:12.5px;color:var(--muted);margin-bottom:14px">
-              1. Ative a <b>Depuração por Wi-Fi</b> nas opções de desenvolvedor do seu celular<br>
-              2. Conecte o celular na MESMA rede Wi-Fi do proxy<br>
-              3. Clique em conectar → proxy ativa automaticamente em TODO o celular
-            </div>
-            <div style="display:grid;grid-template-columns:2fr 1fr;gap:8px;margin-bottom:8px">
-              <input id=ipadb placeholder="IP do celular (ex: 192.168.0.15)" style="padding:10px;background:#070a20;border:1px solid var(--borda);border-radius:8px;color:#fff;outline:none">
-              <input id=portaadb value=5555 style="padding:10px;background:#070a20;border:1px solid var(--borda);border-radius:8px;color:#fff;text-align:center;outline:none">
-            </div>
-            <div style="display:flex;gap:8px;flex-wrap:wrap">
-              <button class="btn btn-primary" onclick=conectarADB()>🔗 CONECTAR ADB WI-FI</button>
-              <button class="btn btn-verde" onclick=abrirFF()>🎮 ABRIR FF + PROXY AUTO</button>
-              <button class="btn btn-verm" onclick=desativarProxy()>🛑 DESATIVAR PROXY</button>
-            </div>
-            <div id=adbres style="margin-top:10px;font-family:monospace;font-size:12px;color:var(--muted);min-height:20px"></div>
-          </div>
-          <div class=card>
-            <div style="font-weight:700;margin-bottom:10px">📦 Dados da Conexão</div>
-            <table>
-              <tr><td style="padding:6px 0;color:var(--muted)">🧦 Proxy SOCKS5</td><td id=p1>127.0.0.1:1080</td></tr>
-              <tr><td style="padding:6px 0;color:var(--muted)">🚀 Proxy UDP</td><td id=p2>127.0.0.1:1081</td></tr>
-              <tr><td style="padding:6px 0;color:var(--muted)">🕸️ Painel Web</td><td id=p3>0.0.0.0:8888</td></tr>
-              <tr><td style="padding:6px 0;color:var(--muted)">🔐 Chave</td><td style="font-family:monospace;color:var(--roxo2)">okaida2026</td></tr>
-              <tr><td style="padding:6px 0;color:var(--muted)">⏰ Duração</td><td>7 HORAS</td></tr>
-            </table>
-          </div>
-        </div>
-
-        <div class="grid-2">
-          <div class=card>
-            <div style="font-weight:700;margin-bottom:10px">🎟️ Gerar Código de Acesso 6 Dígitos</div>
-            <div style="font-size:12.5px;color:var(--muted);margin-bottom:14px">
-              Qualquer pessoa que digitar esse código ou escanear o QR conecta AUTOMATICAMENTE no seu proxy, válido por 7 horas.
-            </div>
-            <button class="btn btn-primary" onclick=gerarWifi()>📶 GERAR CÓDIGO NOVO</button>
-          </div>
-          <div class=card id=wifi-res>
-            <div style="opacity:.6;font-size:13px">Clique em GERAR CÓDIGO NOVO para aparecer o QR + senha</div>
-          </div>
-        </div>
-
-        <div class=card style="margin-top:16px">
-          <div style="font-weight:700;margin-bottom:12px">📜 Últimos Códigos Gerados</div>
-          <table><thead><tr><th>🔢 Código</th><th>🕐 Criado</th><th>⏳ Expira</th><th>🔁 Usos</th><th style="text-align:right">Status</th></tr></thead><tbody id=wifi-lista><tr><td colspan=5 style="text-align:center;padding:20px;color:var(--muted)">Nenhum código gerado ainda</td></tr></tbody></table>
-        </div>
-      </section>
-
-<section id="wifi" class="aba">
-  <div class="topo-aba">
-    <h2>📶 WI-FI · DEPURAÇÃO · COMPARTILHAMENTO</h2>
-    <span class="tag tag-info">Acesso Mestre</span>
+<div class=container>
+  <!-- MENU LATERAL COMPLETO -->
+  <div class=menu>
+    <div class="item-menu ativo" data-aba=dash>📊 PAINEL PRINCIPAL</div>
+    <div class=item-menu data-aba=fullvermelho>🔴 FULL VERMELHO / MUNDIAL</div>
+    <div class=item-menu data-aba=hacks>🛠️ FUNÇÕES AVANÇADAS</div>
+    <div class=item-menu data-aba=wifi>📶 WI-FI · DEPURAÇÃO · COMPARTILHAR</div>
+    <div class=item-menu data-aba=config>⚙️ CONFIGURAÇÕES</div>
+    <div class=item-menu data-aba=logs>📜 LOGS E HISTÓRICO</div>
   </div>
 
-  <div class="grid-2">
-    <div class="card">
-      <h3>🔗 DEPURAÇÃO POR WI-FI</h3>
-      <p style="color:var(--muted);font-size:12px;margin:8px 0 14px">1. Ative Opções de Desenvolvedor e Depuração por Wi-Fi no celular<br>2. Ambos na MESMA rede<br>3. Digite IP e porta → Conectar</p>
-      <div style="display:flex;gap:8px;margin-bottom:10px">
-        <input id="ipadb" placeholder="IP do celular ex: 192.168.0.12" style="flex:1;padding:10px;background:#070a20;border:1px solid var(--borda);border-radius:8px;color:#fff">
-        <input id="portaadb" value="5555" style="width:90px;padding:10px;background:#070a20;border:1px solid var(--borda);border-radius:8px;color:#fff;text-align:center">
+  <!-- CONTEÚDO DAS ABAS -->
+  <div class=conteudo>
+
+    <!-- ABA 1: PAINEL PRINCIPAL -->
+    <div id=dash class="aba visivel">
+      <div class=grid-2>
+        <div class=card><h3>⏱️ Uptime (7h)</h3><div class=valor id=uptime>00:00:00</div><span id=pct>0%</span> utilizado</div>
+        <div class=card><h3>🎯 Capas Hoje</h3><div class=valor id=capas>0</div></div>
+        <div class=card><h3>💀 Peito → Cabeça</h3><div class=valor id=peitocabeca>0</div></div>
+        <div class=card><h3>📦 Pacotes UDP</h3><div class=valor id=udp>0</div></div>
+        <div class=card><h3>🔗 Conexões Ativas</h3><div class=valor id=conexoes>0</div></div>
+        <div class=card><h3>👥 Online Agora</h3><div class=valor id=online>0</div><span id=paises>0 países</span></div>
+        <div class=card><h3>🌐 IPs Únicos</h3><div class=valor id=ipsunicos>0</div></div>
+        <div class=card><h3>🛡️ Anti-Ban</h3><div class=valor style=color:var(--verde)>20</div><span class="tag tag-verde">ATIVO</span></div>
       </div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap">
-        <button class="btn btn-primary" onclick="conectarADB()">🔗 CONECTAR</button>
-        <button class="btn btn-verde" onclick="abrirFF()">🎮 ABRIR FF</button>
-        <button class="btn btn-verm" onclick="desativarProxy()">🛑 PARAR PROXY</button>
+    </div>
+
+    <!-- ABA 2: FULL VERMELHO -->
+    <div id=fullvermelho class=aba>
+      <h2>🔴 NÍVEL MUNDIAL / FULL VERMELHO</h2>
+      <div class=card style=margin:16px 0>
+        <button class="btn btn-principal" style=width:100%;padding:14px;font-size:16px onclick=toggleFull()>🔴 LIGAR / DESLIGAR TUDO NO MÁXIMO</button>
       </div>
-      <div id="logadb" style="margin-top:10px;font-family:monospace;font-size:11px;color:var(--muted);min-height:24px"></div>
     </div>
 
-    <div class="card">
-      <h3>⚙️ DADOS DE CONEXÃO</h3>
-      <table style="width:100%;margin-top:8px">
-        <tr><td style="padding:6px 0;color:var(--muted)">SOCKS5</td><td>127.0.0.1:1080</td></tr>
-        <tr><td style="padding:6px 0;color:var(--muted)">UDP</td><td>127.0.0.1:1081</td></tr>
-        <tr><td style="padding:6px 0;color:var(--muted)">Painel</td><td>Render:8888</td></tr>
-        <tr><td style="padding:6px 0;color:var(--muted)">Validade</td><td>7 HORAS</td></tr>
-      </table>
+    <!-- ABA 3: FUNÇÕES -->
+    <div id=hacks class=aba>
+      <h2>🛠️ FUNÇÕES NÍVEL MUNDIAL</h2>
+      <div id=lista-hacks class=grid-2></div>
     </div>
-  </div>
 
-  <div class="card" style="margin-top:16px">
-    <h3>🎟️ GERAR CÓDIGO DE COMPARTILHAMENTO 6 DÍGITOS</h3>
-    <p style="color:var(--muted);font-size:12px;margin:6px 0 14px">Quem digitar o código conecta automaticamente no seu proxy</p>
-    <button class="btn btn-primary" onclick="gerarCodigo()">📶 GERAR NOVO CÓDIGO</button>
-    <div id="resultadocod" style="margin-top:16px"></div>
-  </div>
+    <!-- ABA 4: 📶 O QUE VOCÊ QUERIA -->
+    <div id=wifi class=aba>
+      <h2>📶 WI-FI · DEPURAÇÃO · COMPARTILHAMENTO</h2>
+      <div class=grid-2>
+        <div class=card>
+          <h3>🔗 DEPURAÇÃO POR WI-FI</h3>
+          <p style=color:var(--muted);font-size:13px;margin:8px 0>Ative Depuração por Wi-Fi nas opções de dev do celular, mesma rede que o proxy</p>
+          <input id=ipadb placeholder="IP do celular: ex 192.168.0.10">
+          <input id=portaadb value=5555 style=width:100px>
+          <div style=display:flex;gap:8px;margin-top:8px;flex-wrap:wrap>
+            <button class="btn btn-principal" onclick=conectarADB()>🔗 CONECTAR</button>
+            <button class="btn btn-verde" onclick=abrirFF()>🎮 ABRIR FF</button>
+            <button class="btn btn-verm" onclick=desativarProxy()>🛑 PARAR PROXY</button>
+          </div>
+          <div id=logadb style=margin-top:10px;font-family:monospace;font-size:12px;color:var(--muted)></div>
+        </div>
 
-  <div class="card" style="margin-top:16px">
-    <h3>📜 CÓDIGOS GERADOS</h3>
-    <table style="width:100%;margin-top:8px">
-      <thead><tr style="border-bottom:1px solid var(--borda)"><th>Código</th><th>Criado</th><th>Expira</th><th>Status</th></tr></thead>
-      <tbody id="listacod"><tr><td colspan="4" style="text-align:center;padding:20px;color:var(--muted)">Nenhum código ainda</td></tr></tbody>
-    </table>
-  </div>
-</section>
+        <div class=card>
+          <h3>⚙️ DADOS DE CONEXÃO</h3>
+          <table><tr><td>SOCKS5</td><td>127.0.0.1:1080</td></tr><tr><td>UDP</td><td>127.0.0.1:1081</td></tr><tr><td>Painel</td><td>Render Oficial</td></tr><tr><td>Validade</td><td>7 HORAS</td></tr></table>
+        </div>
+      </div>
 
-      <section id=config class=aba><h2 style=margin:0 0 14px>⚙️ Configurações</h2><div class=grid-3>
-        <div class=card><b>🔐 Chave Mestra</b><div style=font-family:monospace;color:var(--roxo2);margin-top:6px>okaida2026</div></div>
-        <div class=card><b>⏰ Sessão Máxima</b><div style=font-size:22px;font-weight:800;margin-top:6px>7 HORAS</div></div>
-        <div class=card><b>🛡️ Anti-Ban</b><div style=font-size:22px;font-weight:800;color:#4ade80;margin-top:6px>20 CAMADAS</div></div>
-        <div class=card><b>🌐 Região</b><div style=font-size:22px;font-weight:800;margin-top:6px>🇧🇷 BRASIL</div></div>
-        <div class=card><b>🧦 SOCKS5</b><div style=font-family:monospace;margin-top:6px>0.0.0.0:1080</div></div>
-        <div class=card><b>🚀 UDP</b><div style=font-family:monospace;margin-top:6px>0.0.0.0:1081</div></div>
-      </div></section>
+      <div class=card>
+        <h3>🎟️ GERAR CÓDIGO DE COMPARTILHAMENTO 6 DÍGITOS</h3>
+        <button class="btn btn-principal" style=margin:8px 0 onclick=gerarCodigo()>📶 GERAR NOVO CÓDIGO</button>
+        <div id=resultadocod></div>
+      </div>
+
+      <div class=card>
+        <h3>📜 CÓDIGOS GERADOS</h3>
+        <table><thead><tr><th>Código</th><th>Criado</th><th>Expira</th><th>Status</th></tr></thead><tbody id=listacod><tr><td colspan=4 style=text-align:center;padding:20px;color:var(--muted)">Nenhum código ainda</td></tr></tbody></table>
+      </div>
     </div>
-  </main>
+
+    <div id=config class=aba><h2>⚙️ CONFIGURAÇÕES</h2></div>
+    <div id=logs class=aba><h2>📜 LOGS</h2></div>
+  </div>
 </div>
 
 <script>
-const K="{{ key }}";
-const PERFIS={{ stats.perfis|tojson }} || {};
-const ARMAS={{ stats.armas|tojson }} || ["MP40","SCAR","AK47","M4A1","AWM","M1887","M1014","UMP","XM8","FAMAS","GROZA","SG12","AUG"];
-const POR_ARMA={{ stats.por_arma|tojson }} || {};
-let S={{ stats|tojson }} || {};
-let LOGS=[],grafPkt=[],grafTime=[],g1,g2;
+// NAVEGAÇÃO
+document.querySelectorAll('.item-menu').forEach(i=>{i.onclick=()=>{
+  document.querySelectorAll('.item-menu').forEach(x=>x.classList.remove('ativo'));
+  document.querySelectorAll('.aba').forEach(x=>x.classList.remove('visivel'));
+  i.classList.add('ativo');
+  document.getElementById(i.dataset.aba).classList.add('visivel');
+}})
 
-document.querySelectorAll('.menu-item').forEach(m=>m.onclick=()=>{
-  document.querySelectorAll('.menu-item').forEach(x=>x.classList.remove('ativo'));
-  document.querySelectorAll('.aba').forEach(x=>x.classList.remove('ativa'));
-  m.classList.add('ativo');document.getElementById(m.dataset.aba).classList.add('ativa');
-  if(m.dataset.aba==='controles')renderControles();
-  if(m.dataset.aba==='perfis')renderPerfis();
-  if(m.dataset.aba==='armas')renderArmas();
-  if(m.dataset.aba==='usuarios')renderUsers();
-});
-
-function log(tipo,texto){
-  const d=new Date();const t=`${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}:${String(d.getSeconds()).padStart(2,'0')}`;
-  const cls={OK:'ok',ER:'er',INFO:'info',AV:'av'}[tipo]||'info';
-  LOGS.unshift({t,tipo,cls,texto});if(LOGS.length>200)LOGS.pop();
-  const el=document.getElementById('logbox');if(!el)return;
-  el.innerHTML=LOGS.slice(0,120).map(l=>`<div class="l ${l.cls}"><span class=t>[${l.t}]</span>${l.texto}</div>`).join('');
-}
-
-const FUNCOES=[
-  {id:'CAPA_NO_AR',nome:'🚀 Capa no Ar',desc:'Atira pra cima → mata na cabeça',p:true},
-  {id:'ATRAVES_PAREDE',nome:'🎯 Capa Atrás da Parede',desc:'Atravessa obstáculos',p:true},
-  {id:'AVIAO_RAPIDO',nome:'🪂 Avião 3x Rápido',desc:'Cai mais rápido do avião'},
-  {id:'NO_SPREAD',nome:'🎯 0 Spread',desc:'Toda bala no mesmo lugar'},
-  {id:'SEM_RECOIL',nome:'🎯 0 Recoil',desc:'Mira não sobe'},
-  {id:'BALA_RÁPIDA',nome:'⚡ Bala Rápida',desc:'+100% velocidade'},
-  {id:'AIMBOT_SUAVE',nome:'🎯 Aimbot Suave',desc:'Mira humana na cabeça'},
-  {id:'FOV_AMPLIADO',nome:'👀 FOV Ampliado',desc:'Vê mais inimigos'},
-  {id:'DANO_MÁXIMO',nome:'💀 Dano Máximo',desc:'+120% dano',p:true},
-  {id:'TIRO_PERFURANTE',nome:'⚡ Tiro Perfurante',desc:'Atravessa 6 inimigos',p:true},
-  {id:'SUPER_PULO',nome:'🦘 Super Pulo',desc:'2.4x mais alto'},
-  {id:'SEM_QUEDA',nome:'🦶 Sem Queda',desc:'Nunca toma dano de queda'},
-  {id:'VELOCIDADE',nome:'🏃 Velocidade',desc:'Corre 55% mais rápido'},
-  {id:'AUTO_PULO',nome:'🦘 Auto Pulo',desc:'Pula sozinho nas beiradas'},
-  {id:'SILENCIADOR',nome:'🔇 Silenciador Auto',desc:'Ninguém ouve seus tiros'},
-];
-
-function renderControles(){
-  const el=document.getElementById('lista-controles');if(!el)return;
-  const f=S.flags||{};
-  el.innerHTML=FUNCOES.map(x=>`
-    <div class=card style=padding:14px;display:flex;align-items:center;justify-content:space-between;gap:10px>
-      <div style=min-width:0>
-        <div style=font-weight:700>${x.nome} ${x.p?'<span class="tag tag-desl" style=margin-left:6px>⚠️ CUIDADO</span>':''}</div>
-        <div style=font-size:12px;color:var(--muted);margin-top:2px>${x.desc}</div>
-      </div>
-      <div class="toggle ${f[x.id]?'on':''}" onclick=toggle('${x.id}',this)></div>
-    </div>`).join('');
-}
-
-function renderPerfis(){
-  const el=document.getElementById('lista-perfis');if(!el)return;
-  const lista=[
-    {k:'SO_CAPA',n:'🎯 SÓ CAPA',d:'Tudo na cabeça · 100% headshot',c:'#7c3aed'},
-    {k:'PESCOCO',n:'🎯 PESCOÇO',d:'Meio termo · difícil detectar',c:'#38bdf8'},
-    {k:'PEITO',n:'💀 PEITO → CABEÇA',d:'Converte peito em cabeça',c:'#22c55e'},
-    {k:'PE',n:'🦶 SÓ PÉ',d:'Tudo no pé · troll',c:'#f59e0b'},
-    {k:'MAX',n:'⚡ PROXY MAX',d:'Tudo ligado · máximo dano',c:'#ef4444'},
-    {k:'RANKED',n:'🏆 RANQUEADA SEGURA',d:'Anti-ban forte · discreto',c:'#8b5cf6'},
-  ];
-  el.innerHTML=lista.map(x=>`
-    <div class=card style=cursor:pointer;border-left:3px solid ${x.c} onclick=perfil('${x.k}')>
-      <div style=font-weight:800;font-size:16px>${x.n}</div>
-      <div style=font-size:12.5px;color:var(--muted);margin-top:4px>${x.d}</div>
-      <div style=margin-top:10px><span class="tag tag-info">▶ CLICAR PRA ATIVAR</span></div>
-    </div>`).join('');
-}
-
-function renderArmas(){
-  const el=document.getElementById('tabela-armas');if(!el)return;
-  const perfis_opts=['SO_CAPA','PESCOCO','PEITO','PE','MAX','RANKED'];
-  el.innerHTML=ARMAS.map(a=>`
-    <tr><td style=font-weight:600>${a}</td>
-    <td><span class="tag tag-info">${POR_ARMA[a]||'SO_CAPA'}</span></td>
-    <td style=text-align:right><select onchange="arma('${a}',this.value)" class=btn-sec style=padding:6px 10px;border-radius:6px;background:#0a0f2e;color:#fff;border:1px solid var(--borda)>
-      ${perfis_opts.map(p=>`<option value=${p} ${POR_ARMA[a]===p?'selected':''}>${p}</option>`).join('')}
-    </select></td></tr>`).join('');
-}
-
-function renderUsers(){
-  const el=document.getElementById('tabela-users');if(!el)return;
-  const u=(S.usuarios||{}).ultimos_20||[];
-  el.innerHTML=u.length?u.map(x=>`<tr><td>${x.flag||'🌍'} ${x.nome_pais||x.pais||'-'}</td><td style=font-family:monospace>${x.ip||'-'}</td><td>${x.servidor_ff||'-'}</td><td style=color:var(--muted)>${x.ultima_vez?new Date(x.ultima_vez*1000).toLocaleTimeString('pt-BR'):'-'}</td><td>${x.tiros||0}</td><td>${x.capas||0}</td></tr>`).join(''):`<tr><td colspan=6 style=text-align:center;padding:30px;color:var(--muted)>Nenhum usuário conectado ainda</td></tr>`;
-}
-
-function toggle(id,el){
-  const v=el.classList.toggle('on')?1:0;
-  fetch(`/api/flags/${id}/${v}`).then(r=>r.json()).then(()=>{
-    log(v?'OK':'INFO',`${FUNCOES.find(f=>f.id===id)?.nome||id} → ${v?'LIGADO':'DESLIGADO'}`);
-    S.flags=S.flags||{};S.flags[id]=!!v;
-  });
-}
-function perfil(k){fetch(`/api/perfil/${k}`).then(()=>{log('OK',`Perfil alterado → ${k}`);S.perfil_chave=k});}
-function arma(a,p){fetch(`/api/arma/${a}/${p}`).then(()=>{log('OK',`${a} → ${p}`);POR_ARMA[a]=p});}
-function gerarWifi(){
+// FUNÇÕES PRONTAS
+function gerarCodigo(){
   fetch('/api/wifi/novo').then(r=>r.json()).then(d=>{
-    if(!d.ok)return;
-    document.getElementById('wifi-res').innerHTML=`
-      <div style=text-align:center>
-        <div style=font-size:11px;letter-spacing:2px;color:var(--muted);text-transform:uppercase>Código Wi-Fi</div>
-        <div style=font-size:48px;font-weight:900;letter-spacing:14px;color:var(--roxo2);margin:8px 0>${d.dados.codigo}</div>
-        <div style=display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin-top:10px>
-          <div><div style=font-size:11px;color:var(--muted);margin-bottom:4px>📱 Escanear Wi-Fi</div><img src="${d.qr_wifi}" style=width:140px;border-radius:10px;border:1px solid var(--borda)></div>
-          <div><div style=font-size:11px;color:var(--muted);margin-bottom:4px>🔗 Conectar Proxy</div><img src="${d.qr_proxy_b64}" style=width:140px;border-radius:10px;border:1px solid var(--borda)></div>
-        </div>
-        <div style=margin-top:12px><span class="tag tag-ligado">✅ VÁLIDO 7 HORAS</span></div>
-      </div>`;
-    log('OK',`Código Wi-Fi gerado: ${d.dados.codigo}`);
-  });
+    if(!d.ok)return alert('Erro');
+    document.getElementById('resultadocod').innerHTML = `
+    <div style=text-align:center;margin-top:10px>
+      <div style=font-size:52px;font-weight:900;letter-spacing:12px;color:var(--roxo2)>${d.dados.codigo}</div>
+      <div style=display:flex;gap:14px;justify-content:center;margin-top:14px;flex-wrap:wrap>
+        <div><img src="${d.qr_wifi}" style=width:140px;border-radius:8px><p style=font-size:12px;color:var(--muted)>Wi-Fi</p></div>
+        <div><img src="${d.qr_proxy_b64}" style=width:140px;border-radius:8px><p style=font-size:12px;color:var(--muted)>Proxy</p></div>
+      </div>
+      <span class="tag tag-ligado">✅ Válido 7 horas</span>
+    </div>`;
+    atualizarListaCod();
+  })
 }
-
-function atualiza(){
-  const u=S.uptime||{};
-  document.getElementById('k-up').textContent=u.texto||'00:00:00';
-  document.getElementById('up').textContent=u.texto||'';
-  document.getElementById('k-up2').textContent=(u.porcento||0)+'% utilizado';
-  document.getElementById('bar').style.width=(u.porcento||0)+'%';
-  document.getElementById('resta').textContent=(u.porcento||0)<100?u.texto+' de 7h':'⏰ Expirado';
-  document.getElementById('k-capa').textContent=(S.capa||0).toLocaleString('pt-BR');
-  document.getElementById('k-peito').textContent=(S.peito||0).toLocaleString('pt-BR');
-  document.getElementById('k-pkt').textContent=((S.udp||{}).p||0).toLocaleString('pt-BR');
-  document.getElementById('k-con').textContent=((S.tcp||{}).c||0)+((S.udp||{}).c||0);
-  const us=S.usuarios||{};
-  document.getElementById('k-on').textContent=us.online_agora||0;
-  document.getElementById('k-ips').textContent=us.ips_unicos_total||0;
-  document.getElementById('k-pais').textContent=(us.paises_distintos||0)+' países';
-  document.getElementById('perfil-atual').textContent=S.perfil_atual||PERFIS[S.perfil_chave]?.nome||'SO_CAPA';
-  grafTime.push(new Date().toLocaleTimeString('pt-BR'));
-  grafPkt.push(((S.udp||{}).p||0)%1000);
-  if(grafTime.length>30){grafTime.shift();grafPkt.shift()}
-  if(g1)g1.setOption({xAxis:{data:grafTime},series:[{data:grafPkt}]});
-  const fu=document.getElementById('funcoes');if(fu && !fu.innerHTML)renderControles();
+function conectarADB(){
+  const ip=document.getElementById('ipadb').value,p=document.getElementById('portaadb').value;
+  fetch(`/api/virus/conectar_adb?ip=${encodeURIComponent(ip)}&p=${p}`).then(r=>r.json()).then(d=>{
+    document.getElementById('logadb').textContent = d.ok?'✅ CONECTADO':'❌ ERRO: '+(d.erro||'desconhecido')
+  })
 }
-
-// Gráficos
-function initGraficos(){
-  const st=getComputedStyle(document.documentElement);
-  const roxo=st.getPropertyValue('--roxo').trim()||'#7c3aed';
-  const azul=st.getPropertyValue('--azul').trim()||'#38bdf8';
-  g1=echarts.init(document.getElementById('graf'));
-  g1.setOption({backgroundColor:'transparent',tooltip:{trigger:'axis'},grid:{left:40,right:20,top:20,bottom:30},
-    xAxis:{type:'category',data:[],axisLine:{lineStyle:{color:'#312e81'}},axisLabel:{color:'#94a3b8'}},
-    yAxis:{type:'value',splitLine:{lineStyle:{color:'#1e1b4b'}},axisLabel:{color:'#94a3b8'}},
-    series:[{type:'line',smooth:true,data:[],lineStyle:{color:roxo,width:3},areaStyle:{color:{type:'linear',x:0,y:0,x2:0,y2:1,colorStops:[{offset:0,color:roxo+'cc'},{offset:1,color:roxo+'00'}]}}}]});
-  g2=echarts.init(document.getElementById('pais'));
-  const top=(S.usuarios||{}).top_paises||[];
-  g2.setOption({backgroundColor:'transparent',tooltip:{},legend:{bottom:0,textStyle:{color:'#94a3b8'}},
-    series:[{type:'pie',radius:['40%','70%'],data:top.length?top.map((t,i)=>({name:t.p,value:t.q,itemStyle:{color:[roxo,azul,'#22c55e','#f59e0b','#ef4444','#8b5cf6','#06b6d4'][i%7]}})):[{name:'Aguardando...',value:1,itemStyle:{color:'#1e1b4b'}}],
-    label:{color:'#e2e8f0'}}]});
-  addEventListener('resize',()=>{g1.resize();g2.resize()});
+function abrirFF(){fetch('/api/virus/abrir_ff')}
+function desativarProxy(){fetch('/api/virus/desativar_proxy')}
+function atualizarListaCod(){
+  fetch('/api/wifi/lista').then(r=>r.json()).then(d=>{
+    document.getElementById('listacod').innerHTML = d.lista.map(c=>`
+    <tr><td style=font-family:monospace;color:var(--roxo2)>${c.codigo}</td>
+    <td>${new Date(c.criado*1000).toLocaleString('pt-BR')}</td>
+    <td>${new Date(c.expira*1000).toLocaleString('pt-BR')}</td>
+    <td><span class="tag ${Date.now()>c.expira*1000?'tag-desl':'tag-ligado'}">${Date.now()>c.expira*1000?'EXPIRADO':'ATIVO'}</span></td></tr>`).join('')
+  })
 }
+function toggleFull(){fetch('/api/fullvermelho/toggle')}
 
-// Socket Ao Vivo
-try{
-  const s=io();
-  s.on('stats',d=>{S=d;atualiza()});
-  s.on('log',d=>log(d.tipo,d.texto));
-  s.on('connect',()=>log('OK','✅ Painel conectado ao servidor'));
-  s.on('disconnect',()=>log('AV','⚠️ Conexão perdida, reconectando...'));
-}catch(e){}
-
-setTimeout(()=>{initGraficos();atualiza();log('INFO','🕵️ Painel Okaida carregado');log('OK','🛡️ Anti-Ban 20 camadas ativo');log('INFO','🎯 Pronto para receber conexões')},200);
-setInterval(()=>fetch('/api/st').then(r=>r.json()).then(d=>{S=d;atualiza()}),3000);
+// ATUALIZA DADOS DO PAINEL
+setInterval(()=>{fetch('/api/st').then(r=>r.json()).then(d=>{
+  document.getElementById('uptime').textContent = d.uptime.texto
+  document.getElementById('pct').textContent = d.uptime.porcento+'%'
+  document.getElementById('capas').textContent = d.capa
+  document.getElementById('peitocabeca').textContent = d.peito_cabeca
+})},1000)
 </script>
 </body></html>
