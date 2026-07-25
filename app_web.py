@@ -159,3 +159,50 @@ def health():
 
 if __name__=="__main__":
     socketio.run(app, host="0.0.0.0", port=int(os.environ.get("PORT",8888)), allow_unsafe_werkzeug=True)
+
+# ========== ROTAS DA ABA WI-FI / DEPURAÇÃO ==========
+@app.route("/api/virus/conectar_adb")
+@auth.requer_login
+def api_conectar_adb():
+    ip = request.args.get("ip", "").strip()
+    porta = request.args.get("p", "5555")
+    try:
+        import subprocess
+        r = subprocess.run(["adb", "connect", f"{ip}:{porta}"], capture_output=True, text=True, timeout=10)
+        ok = "connected to" in r.stdout.lower() or "already connected" in r.stdout.lower()
+        return jsonify({"ok": ok, "saida": r.stdout.strip() or r.stderr.strip(), "erro": None if ok else "Não foi possível conectar"})
+    except Exception as e:
+        return jsonify({"ok": False, "erro": str(e)})
+
+@app.route("/api/virus/abrir_ff")
+@auth.requer_login
+def api_abrir_ff():
+    try:
+        import subprocess
+        r = subprocess.run(["am", "start", "-a", "android.intent.action.MAIN", "-c", "android.intent.category.LAUNCHER", "-n", "com.dts.freefireth/com.dts.freefire.MainActivity"], capture_output=True, text=True, timeout=10)
+        ok = r.returncode == 0
+        return jsonify({"ok": ok, "mensagem": "Free Fire aberto com sucesso" if ok else "Comando enviado, verifique o celular"})
+    except Exception as e:
+        return jsonify({"ok": True, "aviso": "Funciona apenas quando rodar direto no celular/termux", "erro": str(e)})
+
+@app.route("/api/virus/desativar_proxy")
+@auth.requer_login
+def api_desativar_proxy():
+    try:
+        import subprocess
+        subprocess.run(["settings", "put", "global", "http_proxy", ":0"], capture_output=True)
+        subprocess.run(["settings", "put", "global", "global_http_proxy_host", ""], capture_output=True)
+        subprocess.run(["settings", "put", "global", "global_http_proxy_port", ""], capture_output=True)
+        return jsonify({"ok": True, "mensagem": "Proxy removido do sistema"})
+    except Exception as e:
+        return jsonify({"ok": True, "aviso": "Funciona apenas direto no celular", "erro": str(e)})
+
+@app.route("/api/fullvermelho/toggle")
+@auth.requer_login
+def api_toggle_full():
+    try:
+        from extras_hacker import set_fullvermelho, stats_fullvermelho
+        estado = stats_fullvermelho().get("ativo", False)
+        return jsonify({"ok": True, "ativo": not estado, **set_fullvermelho(0 if estado else 1)})
+    except Exception as e:
+        return jsonify({"ok": False, "erro": str(e)})
