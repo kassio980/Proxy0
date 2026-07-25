@@ -1,35 +1,96 @@
 <!doctype html><html lang=pt-BR><head><meta charset=utf-8>
 <meta name=viewport content="width=device-width,initial-scale=1">
-<title>🔐 PROXY OKAIDA — ACESSO</title>
-<script src="https://cdn.tailwindcss.com"></script>
+<title>🔐 PROXY OKAIDA — ACESSO RESTRITO</title>
 <style>
-:root{--bg:#050816;--card:#0b1030;--borda:#1e1b4b;--roxo:#7c3aed;--azul:#38bdf8;--texto:#e2e8f0}
-body{margin:0;background:
-  radial-gradient(1200px 600px at 80% -10%, rgba(124,58,237,.25), transparent 60%),
-  radial-gradient(900px 500px at -10% 110%, rgba(56,189,248,.18), transparent 55%),
-  linear-gradient(180deg, var(--bg), #070b1f);
-color:var(--texto);font-family:Inter,system-ui,sans-serif;min-height:100vh;display:flex;align-items:center;justify-content:center}
-.card{width:min(420px,92%);background:linear-gradient(180deg,#0d1338,#0a0f2e);border:1px solid var(--borda);border-radius:18px;padding:36px 32px;box-shadow:0 30px 80px rgba(124,58,237,.25)}
-.logo{display:flex;align-items:center;gap:12px;margin-bottom:22px}
-.hex{width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,var(--roxo),#4338ca);display:flex;align-items:center;justify-content:center}
-h1{font-size:20px;margin:0;background:linear-gradient(90deg,#fff,#c4b5fd);-webkit-background-clip:text;background-clip:text;color:transparent}
-.sub{opacity:.6;font-size:12px;letter-spacing:2px;text-transform:uppercase;margin-bottom:24px}
-input{width:100%;padding:14px 16px;background:#070a20;border:1px solid #1e1b4b;border-radius:10px;color:#fff;font-size:15px;letter-spacing:3px;outline:none;margin:6px 0 14px}
-input:focus{border-color:var(--roxo);box-shadow:0 0 0 3px rgba(124,58,237,.2)}
-button{width:100%;padding:14px;background:linear-gradient(135deg,var(--roxo),#4f46e5);color:#fff;border:0;border-radius:10px;font-weight:700;letter-spacing:2px;cursor:pointer;text-transform:uppercase;font-size:13px}
-button:hover{transform:translateY(-1px);box-shadow:0 12px 30px rgba(124,58,237,.45)}
-.erro{color:#f87171;font-size:13px;min-height:18px;margin-top:8px}
-.blink{animation:b 1s steps(2) infinite}@keyframes b{50%{opacity:0}}
+:root{
+  --bg:#050816;--bg2:#070b1f;--card:#0d1338;--card2:#111a45;
+  --borda:#1e1b4b;--borda2:#312e81;
+  --roxo:#7c3aed;--roxo2:#a78bfa;--azul:#38bdf8;--azul2:#0ea5e9;
+  --verde:#22c55e;--vermelho:#ef4444;
+  --texto:#e2e8f0;--muted:#94a3b8;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{min-height:100vh;font-family:'Inter',system-ui,-apple-system,sans-serif;color:var(--texto)}
+body{
+  background:
+    radial-gradient(1200px 700px at 85% -10%, rgba(124,58,237,.28), transparent 60%),
+    radial-gradient(900px 600px at -10% 110%, rgba(56,189,248,.2), transparent 55%),
+    linear-gradient(180deg, var(--bg) 0%, #060a1e 50%, #050816 100%);
+  display:flex;align-items:center;justify-content:center;padding:20px;
+}
+
+.card-wrap{width:100%;max-width:440px;position:relative}
+.card{
+  background:linear-gradient(180deg,rgba(13,19,56,.95),rgba(10,15,46,.98));
+  border:1px solid var(--borda2);border-radius:20px;padding:36px 32px;
+  backdrop-filter:blur(16px);
+  box-shadow:0 30px 80px rgba(124,58,237,.25),0 0 0 1px rgba(167,139,250,.08) inset;
+  position:relative;overflow:hidden
+}
+.card::before{
+  content:"";position:absolute;top:-50%;left:-50%;width:200%;height:200%;
+  background:conic-gradient(from 0deg,transparent 0 70%,rgba(124,58,237,.25) 80%,transparent 90%);
+  animation:girar 8s linear infinite;opacity:.4
+}
+@keyframes girar{to{transform:rotate(360deg)}}
+.card>*{position:relative;z-index:2}
+
+.logo{display:flex;align-items:center;gap:14px;margin-bottom:26px}
+.hex{width:52px;height:52px;border-radius:14px;background:linear-gradient(135deg,var(--roxo),#4338ca);display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:900;box-shadow:0 12px 30px rgba(124,58,237,.5)}
+.tit h1{margin:0;font-size:22px;font-weight:900;background:linear-gradient(90deg,#fff,var(--roxo2));-webkit-background-clip:text;background-clip:text;color:transparent}
+.tit p{margin:2px 0 0;font-size:13px;color:var(--muted)}
+
+.erro{background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.3);color:#fca5a5;padding:10px 14px;border-radius:10px;margin-bottom:18px;font-size:13.5px;text-align:center;display:none}
+<!--ERRO-->
+
+.grupo{margin-bottom:18px}
+.grupo label{display:block;font-size:12.5px;font-weight:600;margin-bottom:6px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+.grupo input{
+  width:100%;padding:12px 14px;background:rgba(7,10,32,.85);border:1px solid var(--borda2);border-radius:10px;color:var(--texto);
+  font-size:15px;outline:none;transition:.2s
+}
+.grupo input:focus{border-color:var(--roxo2);box-shadow:0 0 0 3px rgba(124,58,237,.15)}
+
+button{
+  width:100%;padding:13px;border-radius:10px;border:0;font-size:15px;font-weight:700;cursor:pointer;
+  background:linear-gradient(135deg,var(--roxo),var(--azul2));color:#fff;
+  box-shadow:0 8px 25px rgba(124,58,237,.35);transition:.2s
+}
+button:hover{transform:translateY(-1px);box-shadow:0 12px 35px rgba(124,58,237,.45)}
+
+.rodape{margin-top:22px;text-align:center;font-size:12px;color:var(--muted);border-top:1px solid var(--borda);padding-top:16px}
 </style></head><body>
-<div class=card>
-  <div class=logo><div class=hex><svg width=22 height=22 viewBox="0 0 24 24" fill=none stroke=#fff stroke-width=2.2><path d="M12 2L3 7v10l9 5 9-5V7z"/><path d="M3 7l9 5 9-5"/></svg></div>
-    <div><h1>PROXY OKAIDA <span class=blink>_</span></h1><div class=sub>Sistema Exclusivo · Acesso Restrito</div></div></div>
-  <form method=post>
-    <div style=opacity:.7;font-size:12px;letter-spacing:2px;text-transform:uppercase>Chave de Acesso</div>
-    <input name=key type=password placeholder="••••••••••••" autocomplete=off autofocus>
-    <button type=submit>▶ ENTRAR NO SISTEMA</button>
-    <div class=erro id=e></div>
-  </form>
+<div class=card-wrap>
+  <div class=card>
+    <div class=logo>
+      <div class=hex>🔐</div>
+      <div class=tit>
+        <h1>PROXY OKAIDA</h1>
+        <p>Sistema Exclusivo — Acesso Restrito</p>
+      </div>
+    </div>
+
+    <div class=erro id=erro></div>
+
+    <form method=post>
+      <div class=grupo>
+        <label>Chave de Acesso</label>
+        <input name=key placeholder="Digite sua chave mestra aqui..." autocomplete=off required>
+      </div>
+
+      <button type=submit>🔓 ENTRAR NO SISTEMA</button>
+    </form>
+
+    <div class=rodape>
+      © 2026 ONLY TECHNOLOGIES · Todos os direitos reservados<br>
+      Acesso exclusivo apenas para usuários autorizados
+    </div>
+  </div>
 </div>
-<script>if(location.search.includes('e=1'))document.getElementById('e').textContent='❌ Chave inválida'</script>
+<script>
+const params = new URLSearchParams(window.location.search);
+const e = params.get('e');
+if(e==='1') document.getElementById('erro').style.display='block',document.getElementById('erro').textContent='❌ Chave de acesso incorreta, verifique e tente novamente';
+if(e==='2') document.getElementById('erro').style.display='block',document.getElementById('erro').textContent='🔒 Faça login para acessar o painel';
+</script>
 </body></html>

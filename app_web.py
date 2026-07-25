@@ -5,12 +5,18 @@ from flask import Flask, render_template_string, request, redirect, make_respons
 from flask_socketio import SocketIO
 
 app = Flask(__name__, static_folder="www", template_folder="templates")
-app.secret_key = os.environ.get("SECRET_KEY","okaida-proxy-2026-secret-mestra")
+app.secret_key = os.environ.get("SECRET_KEY","okaida-proxy-2026-secret-mestra-v24")
 app.config['SESSION_COOKIE_NAME'] = 'okaida_session'
+app.config['SESSION_COOKIE_HTTPONLY'] = True
 socketio = SocketIO(app, cors_allowed_origins="*", async_mode="threading")
 
+# Carrega AUTH
+import auth
+auth.injetar_rotas(app)
+
+# Carrega módulos com try/except (NÃO QUEBRA)
 MOD = {}
-for nome in ["auth","perfis","geo_users","wifi_share","virus_mode"]:
+for nome in ["perfis","geo_users","wifi_share","virus_mode"]:
     try: MOD[nome] = __import__(nome)
     except Exception as e: MOD[nome] = None
 
@@ -51,116 +57,105 @@ def broadcast():
         time.sleep(1.5)
 threading.Thread(target=broadcast,daemon=True).start()
 
-@app.route("/login", methods=["GET","POST"])
-def login():
-    if not MOD["auth"]: return render_template_string(open(f"{BASE}/templates/login.html").read(), erro=request.args.get("e"))
-    if request.method=="POST":
-        k = request.form.get("key","").strip()
-        if MOD["auth"].chave_valida(k):
-            r = make_response(redirect("/dash"))
-            r.set_cookie("okaida_key", k, max_age=7*86400)
-            session["key"] = k
-            return r
-        return redirect("/login?e=1")
-    return render_template_string(open(f"{BASE}/templates/login.html").read(), erro=request.args.get("e"))
-
-@app.route("/logout")
-def logout():
-    r = make_response(redirect("/login"))
-    r.delete_cookie("okaida_key"); session.clear(); return r
-
-@app.route("/")
-def home():
-    k = request.cookies.get("okaida_key") or request.args.get("key")
-    if MOD.get("auth") and k and MOD["auth"].chave_valida(k):
-        r = make_response(redirect("/dash"))
-        r.set_cookie("okaida_key", k, max_age=7*86400); return r
-    return redirect("/login")
+# ========== ROTAS PROTEGIDAS (PRECISA DE LOGIN) ==========
+@app.route("/dash")
+@auth.requer_login
+def dash():
+    k = request.cookies.get("okaida_key") or session.get("key")
+    info = auth.info_chave(k)
+    return render_template_string(open(f"{BASE}/templates/index.html").read(),
+        user={"nivel": info["nivel"], "mestra": info.get("mestra",False), "dono": info.get("dono","")},
+        key=k, stats=stats())
 
 @app.route("/overlay")
+@auth.requer_login
 def overlay():
     return app.send_static_file("ff_overlay.html")
 
-@app.route("/dash")
-def dash():
-    if MOD.get("auth"):
-        k = request.cookies.get("okaida_key") or session.get("key")
-        if not MOD["auth"].chave_valida(k): return redirect("/login")
-    return render_template_string(open(f"{BASE}/templates/index.html").read(),
-        user={"nivel":"ACESSO MESTRE"}, key=session.get("key",""), stats=stats())
-
 @app.route("/api/st")
+@auth.requer_login
 def api_st(): return jsonify(stats())
 
 @app.route("/api/perfil/<nome>")
+@auth.requer_login
 def api_perfil(nome):
     if not MOD["perfis"]: return jsonify({"ok":False})
-    ok = MOD["perfis"].set_perfil(nome)
-    return jsonify({"ok":ok,"perfil":nome})
+    return jsonify({"ok":MOD["perfis"].set_perfil(nome),"perfil":nome})
 
 @app.route("/api/arma/<arma>/<perfil>")
+@auth.requer_login
 def api_arma(arma,perfil):
     if not MOD["perfis"]: return jsonify({"ok":False})
-    ok = MOD["perfis"].set_por_arma(arma,perfil)
-    return jsonify({"ok":ok,"arma":arma,"perfil":perfil})
+    return jsonify({"ok":MOD["perfis"].set_por_arma(arma,perfil),"arma":arma,"perfil":perfil})
 
 @app.route("/api/flags/<nome>/<int:v>")
+@auth.requer_login
 def api_flag(nome,v):
     return jsonify({"ok":True,"flags":set_flag(nome,bool(v))})
 
-@app.route("/api/wifi/novo")
-def api_wifi():
-    if not MOD["wifi_share"]: return jsonify({"ok":False})
-    d = MOD["wifi_share"].gerar_codigo_compartilhamento()
-    qr = MOD["wifi_share"].gerar_qr_wifi(d)
-    qp = MOD["wifi_share"].gerar_qr_proxy(d)
-    return jsonify({"ok":True,"dados":d,"qr_wifi":qr,"qr_proxy_b64":qp})
-
-@app.route("/api/virus/abrir_ff")
-def api_ff():
-    ok = MOD["virus_mode"].abrir_free_fire() if MOD["virus_mode"] else False
-    return jsonify({"ok":bool(ok)})
-
-@app.route("/api/codigo/<cod>")
-def api_codigo(cod):
-    from wifi_share import validar_codigo
-    u = validar_codigo(cod)
-    return jsonify({"ok":bool(u),"dados":u or {}})
-
-@app.route("/api/fullvermelho/<int:n>")
-def api_fv(n):
-    from extras_hacker import set_fullvermelho, stats_fullvermelho
-    return jsonify({"ok":True, **set_fullvermelho(n), "stats":stats_fullvermelho()})
-
-@app.route("/api/linha")
-def api_linha():
-    try:
-        from proxy_core import LINHA
-        return jsonify({"ok":True, **LINHA.dados_linha()})
-    except Exception as e:
-        return jsonify({"ok":False,"erro":str(e)})
-
 @app.route("/api/hack/<nome>/<int:v>")
+@auth.requer_login
 def api_hack(nome,v):
     try:
         from proxy_core import HACKS
         if nome in HACKS:
             HACKS[nome]["ativo"]=bool(v)
-            try: from extras_hacker import FLAGS; FLAGS[nome]=bool(v)
-            except: pass
+            FLAGS[nome]=bool(v)
         return jsonify({"ok":True,"hacks":{k:v["ativo"] for k,v in HACKS.items()}})
     except Exception as e: return jsonify({"ok":False,"erro":str(e)})
 
 @app.route("/api/hacks")
+@auth.requer_login
 def api_hacks():
     try:
         from proxy_core import HACKS
         return jsonify({"ok":True,"hacks":HACKS})
     except: return jsonify({"ok":False})
 
+@app.route("/api/fullvermelho/<int:n>")
+@auth.requer_login
+def api_fv(n):
+    try:
+        from extras_hacker import set_fullvermelho, stats_fullvermelho
+        return jsonify({"ok":True, **set_fullvermelho(n), "stats":stats_fullvermelho()})
+    except Exception as e: return jsonify({"ok":False,"erro":str(e)})
+
+@app.route("/api/linha")
+@auth.requer_login
+def api_linha():
+    try:
+        from proxy_core import LINHA
+        return jsonify({"ok":True, **LINHA.dados_linha()})
+    except Exception as e: return jsonify({"ok":False,"ativa":False,"erro":str(e)})
+
+@app.route("/api/wifi/novo")
+@auth.requer_login
+def api_wifi():
+    if not MOD["wifi_share"]: return jsonify({"ok":False})
+    d = MOD["wifi_share"].gerar_codigo_compartilhamento()
+    return jsonify({"ok":True,"dados":d,"qr_wifi":MOD["wifi_share"].gerar_qr_wifi(d),"qr_proxy_b64":MOD["wifi_share"].gerar_qr_proxy(d)})
+
+@app.route("/api/codigo/<cod>")
+@auth.requer_login
+def api_codigo(cod):
+    u = MOD["wifi_share"].validar_codigo(cod) if MOD["wifi_share"] else None
+    return jsonify({"ok":bool(u),"dados":u or {}})
+
+@app.route("/api/virus/abrir_ff")
+@auth.requer_login
+def api_ff():
+    ok = MOD["virus_mode"].abrir_free_fire() if MOD["virus_mode"] else False
+    return jsonify({"ok":bool(ok)})
+
+@app.route("/api/virus/desativar_proxy")
+@auth.requer_login
+def api_ff_off():
+    ok = MOD["virus_mode"].desativar_proxy() if MOD["virus_mode"] else False
+    return jsonify({"ok":bool(ok)})
+
 @app.route("/health")
 def health():
-    return jsonify({"ok":True,"modo":"RENDER" if os.environ.get("RENDER") else "TERMUX","proxy_okaida":"v2.2","hora":time.strftime("%Y-%m-%d %H:%M:%S")})
+    return jsonify({"ok":True,"modo":"RENDER" if os.environ.get("RENDER") else "TERMUX","proxy_okaida":"v2.4","hora":time.strftime("%Y-%m-%d %H:%M:%S")})
 
 if __name__=="__main__":
     socketio.run(app, host="0.0.0.0", port=int(os.environ.get("PORT",8888)), allow_unsafe_werkzeug=True)

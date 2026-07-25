@@ -82,7 +82,8 @@ tr:hover td{background:#111a45}
     <div class=menu-item data-aba=armas>🔫 Por Arma</div>
     <div class=menu-item data-aba=usuarios>👥 Usuários</div>
     <div class=menu-item data-aba=logs>📜 Logs Ao Vivo</div>
-    <div class=menu-item data-aba=wifi>📶 Wi-Fi</div>
+    <div class="menu-item" data-aba="wifi">📶 WI-FI · DEPURAÇÃO</div>
+    <div class=menu-item data-aba=wifi>📶 WI-FI · DEPURAÇÃO</div>
     <div class=menu-item data-aba=config>⚙️ Config</div>
     <div style=position:absolute;bottom:16px;left:18px;right:18px>
       <div class=card style=padding:12px;margin:0>
@@ -140,6 +141,59 @@ tr:hover td{background:#111a45}
       <section id=usuarios class=aba><h2 style=margin:0 0 14px>👥 Usuários no Mundo</h2><div class=card><table><thead><tr><th>📍</th><th>🌐 IP</th><th>🎮 Servidor</th><th>📥 Última</th><th>🎯 Tiros</th><th>💀 Capas</th></tr></thead><tbody id=tabela-users></tbody></table></div></section>
       <section id=logs class=aba><div style=display:flex;justify-content:space-between;margin-bottom:14px><h2 style=margin:0>📜 Logs Ao Vivo</h2><button class="btn btn-sec" onclick=document.getElementById('logbox').innerHTML=''>🗑️ Limpar</button></div><div id=logbox class=logs></div></section>
       <section id=wifi class=aba><h2 style=margin:0 0 14px>📶 Wi-Fi & Compartilhamento</h2><div class="grid-2"><div class=card><div style=font-weight:700;margin-bottom:10px>Gerar Código 6 Dígitos</div><div style=font-size:12.5px;color:var(--muted);margin-bottom:14px>Válido 7h · Qualquer um conecta digitando ou escaneando o QR</div><button class="btn btn-primary" onclick=gerarWifi()>📶 GERAR NOVO CÓDIGO</button></div><div class=card id=wifi-res><div style=opacity:.6>Clique no botão para gerar</div></div></div></section>
+      
+      <section id=wifi class=aba>
+        <h2 style="margin:0 0 14px;font-size:22px">📶 WI-FI · DEPURAÇÃO · COMPARTILHAMENTO</h2>
+        <div class="grid-2" style="margin-bottom:16px">
+          <div class=card>
+            <div style="font-weight:700;margin-bottom:10px">🔗 Conectar por Wi-Fi (Depuração Wireless)</div>
+            <div style="font-size:12.5px;color:var(--muted);margin-bottom:14px">
+              1. Ative a <b>Depuração por Wi-Fi</b> nas opções de desenvolvedor do seu celular<br>
+              2. Conecte o celular na MESMA rede Wi-Fi do proxy<br>
+              3. Clique em conectar → proxy ativa automaticamente em TODO o celular
+            </div>
+            <div style="display:grid;grid-template-columns:2fr 1fr;gap:8px;margin-bottom:8px">
+              <input id=ipadb placeholder="IP do celular (ex: 192.168.0.15)" style="padding:10px;background:#070a20;border:1px solid var(--borda);border-radius:8px;color:#fff;outline:none">
+              <input id=portaadb value=5555 style="padding:10px;background:#070a20;border:1px solid var(--borda);border-radius:8px;color:#fff;text-align:center;outline:none">
+            </div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <button class="btn btn-primary" onclick=conectarADB()>🔗 CONECTAR ADB WI-FI</button>
+              <button class="btn btn-verde" onclick=abrirFF()>🎮 ABRIR FF + PROXY AUTO</button>
+              <button class="btn btn-verm" onclick=desativarProxy()>🛑 DESATIVAR PROXY</button>
+            </div>
+            <div id=adbres style="margin-top:10px;font-family:monospace;font-size:12px;color:var(--muted);min-height:20px"></div>
+          </div>
+          <div class=card>
+            <div style="font-weight:700;margin-bottom:10px">📦 Dados da Conexão</div>
+            <table>
+              <tr><td style="padding:6px 0;color:var(--muted)">🧦 Proxy SOCKS5</td><td id=p1>127.0.0.1:1080</td></tr>
+              <tr><td style="padding:6px 0;color:var(--muted)">🚀 Proxy UDP</td><td id=p2>127.0.0.1:1081</td></tr>
+              <tr><td style="padding:6px 0;color:var(--muted)">🕸️ Painel Web</td><td id=p3>0.0.0.0:8888</td></tr>
+              <tr><td style="padding:6px 0;color:var(--muted)">🔐 Chave</td><td style="font-family:monospace;color:var(--roxo2)">okaida2026</td></tr>
+              <tr><td style="padding:6px 0;color:var(--muted)">⏰ Duração</td><td>7 HORAS</td></tr>
+            </table>
+          </div>
+        </div>
+
+        <div class="grid-2">
+          <div class=card>
+            <div style="font-weight:700;margin-bottom:10px">🎟️ Gerar Código de Acesso 6 Dígitos</div>
+            <div style="font-size:12.5px;color:var(--muted);margin-bottom:14px">
+              Qualquer pessoa que digitar esse código ou escanear o QR conecta AUTOMATICAMENTE no seu proxy, válido por 7 horas.
+            </div>
+            <button class="btn btn-primary" onclick=gerarWifi()>📶 GERAR CÓDIGO NOVO</button>
+          </div>
+          <div class=card id=wifi-res>
+            <div style="opacity:.6;font-size:13px">Clique em GERAR CÓDIGO NOVO para aparecer o QR + senha</div>
+          </div>
+        </div>
+
+        <div class=card style="margin-top:16px">
+          <div style="font-weight:700;margin-bottom:12px">📜 Últimos Códigos Gerados</div>
+          <table><thead><tr><th>🔢 Código</th><th>🕐 Criado</th><th>⏳ Expira</th><th>🔁 Usos</th><th style="text-align:right">Status</th></tr></thead><tbody id=wifi-lista><tr><td colspan=5 style="text-align:center;padding:20px;color:var(--muted)">Nenhum código gerado ainda</td></tr></tbody></table>
+        </div>
+      </section>
+
       <section id=config class=aba><h2 style=margin:0 0 14px>⚙️ Configurações</h2><div class=grid-3>
         <div class=card><b>🔐 Chave Mestra</b><div style=font-family:monospace;color:var(--roxo2);margin-top:6px>okaida2026</div></div>
         <div class=card><b>⏰ Sessão Máxima</b><div style=font-size:22px;font-weight:800;margin-top:6px>7 HORAS</div></div>

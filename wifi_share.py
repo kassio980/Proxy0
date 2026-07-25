@@ -90,3 +90,8 @@ if __name__=="__main__":
     d = gerar_codigo_compartilhamento()
     print("Código:", d["codigo"])
     print("Expira em:", d["tempo_horas"],"h")
+
+def listar_todos():
+    _carregar()
+    return sorted(CODIGOS.values(), key=lambda c:-c["criado"])[:30]
+
